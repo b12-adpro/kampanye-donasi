@@ -62,6 +62,28 @@ class DonationRepositoryTest {
     }
 
     @Test
+    void testSaveCreateWithNullDonationId() {
+        Donation donationWithNullId = new Donation(
+            null,
+            "test-campaign-id",
+            456L,
+            5000,
+            DonationStatus.PENDING.getValue(),
+            LocalDateTime.now(),
+            "Test donation message"
+        );
+
+        Donation result = donationRepository.save(donationWithNullId);
+        assertNotNull(result.getDonationId());
+        Donation findResult = donationRepository.findByDonationId(result.getDonationId());
+        assertNotNull(findResult);
+        assertEquals("test-campaign-id", findResult.getCampaignId());
+        assertEquals(456L, findResult.getDonaturId());
+        assertEquals(5000, findResult.getAmount());
+        assertEquals("Test donation message", findResult.getMessage());
+    }
+
+    @Test
     void testFindByDonationIdIfDonationIdFound() {
         donationRepository.save(donation);
         Donation result = donationRepository.findByDonationId(donation.getDonationId());
