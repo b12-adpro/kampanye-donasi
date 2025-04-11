@@ -19,12 +19,12 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import id.ac.ui.cs.advprog.tk_adpro.exception.PaymentServiceException;
+import id.ac.ui.cs.advprog.tk_adpro.exception.WithdrawServiceException;
 
 class WithdrawServiceApiStrategyTest {
     private RestTemplateBuilder restTemplateBuilder;
     private RestTemplate restTemplate;
-    private WithdrawServiceApiStrategy withdrawServiceApiStrategy;
+    private WithdrawServiceAPIStrategy withdrawServiceApiStrategy;
 
     @BeforeEach
     void setUp() {
@@ -35,7 +35,7 @@ class WithdrawServiceApiStrategyTest {
         when(restTemplateBuilder.readTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
         when(restTemplateBuilder.build()).thenReturn(restTemplate);
 
-        withdrawServiceApiStrategy = new WithdrawServiceApiStrategy(restTemplateBuilder);
+        withdrawServiceApiStrategy = new WithdrawServiceAPIStrategy(restTemplateBuilder);
     }
 
     @Test
@@ -106,7 +106,7 @@ class WithdrawServiceApiStrategyTest {
                 eq(Map.class)
         )).thenThrow(new ResourceAccessException("Connection refused"));
 
-        WihtdrawServiceException exception = assertThrows(WithdrawServiceException.class, () -> {
+        WithdrawServiceException exception = assertThrows(WithdrawServiceException.class, () -> {
             withdrawServiceApiStrategy.checkBalance(fundraiserId);
         });
         assertTrue(exception.getMessage().contains("Cannot connect to withdraw service"));
@@ -148,7 +148,7 @@ class WithdrawServiceApiStrategyTest {
                 eq(Map.class)
         )).thenReturn(responseEntity);
 
-        boolean result = withdrawServiceApiStrategy.processPayment(fundraiserId, amount);
+        boolean result = withdrawServiceApiStrategy.withdrawMoney(fundraiserId, amount);
         assertFalse(result);
     }
 
