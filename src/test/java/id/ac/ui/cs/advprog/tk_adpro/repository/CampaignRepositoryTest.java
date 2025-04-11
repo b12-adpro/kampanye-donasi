@@ -93,4 +93,19 @@ class CampaignRepositoryTest {
         List<Campaign> campaignList = campaignRepository.findByFundraiserId("GAADA YAH");
         assertTrue(campaignList.isEmpty());
     }
+
+    @Test
+    void testDeleteByCampaignId_shouldRemoveCampaign() {
+        assertNotNull(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b"));
+        campaignRepository.deleteByCampaignId("13652556-012a-4c07-b546-54eb1396d79b");
+        assertNull(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b"));
+    }
+
+    @Test
+    void testDeleteByCampaignId_nonExistingId_shouldDoNothing() {
+        int initialSize = campaignRepository.findByFundraiserId("eb558e9f-1c39-460e-8860-71af6af63bd6").size();
+        campaignRepository.deleteByCampaignId("999");
+        int finalSize = campaignRepository.findByFundraiserId("eb558e9f-1c39-460e-8860-71af6af63bd6").size();
+        assertEquals(initialSize, finalSize);
+    }
 }

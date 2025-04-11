@@ -34,4 +34,16 @@ public class CampaignRepository {
         for (Campaign c: campaignData) if (c.getFundraiserId().equals(fundraiserId)) campaigns.add(c);
         return campaigns;
     }
+
+    public void deleteByCampaignId(String id) {
+        int i = 0;
+        for (Campaign c : campaignData) {
+            if (c.getCampaignId().equals(id)) {
+                campaignData.remove(i);
+                return;
+            }
+            i++;
+        }
+    }
+
 }
