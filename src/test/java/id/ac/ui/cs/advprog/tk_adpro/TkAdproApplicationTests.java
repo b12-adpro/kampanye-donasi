@@ -12,11 +12,7 @@ class TkAdproApplicationTests {
     void testMainMethod() {
         try (MockedStatic<SpringApplication> mockedSpringApplication = Mockito.mockStatic(SpringApplication.class)) {
             mockedSpringApplication.when(() -> SpringApplication.run(
-<<<<<<< HEAD
                     TkAdproApplication.class, new String[]{}
-=======
-                TkAdproApplication.class, new String[]{}
->>>>>>> b799220a2d7f5ab0352d7336ac22bda3ee1b27cd
             )).thenReturn(null);
 
             TkAdproApplication.main(new String[]{});
