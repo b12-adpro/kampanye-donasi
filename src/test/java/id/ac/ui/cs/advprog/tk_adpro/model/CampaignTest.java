@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DonationTest {
+class CampaignTest {
     @Test
     void testCreateCampaignWithDeskripsi() {
         String status = CampaignStatus.ACTIVE.getValue();
