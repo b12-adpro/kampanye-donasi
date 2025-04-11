@@ -68,13 +68,14 @@ class CampaignStatusStateTest{
     @Test
     void factory_shouldReturnCorrectStateForActive() {
         CampaignStatusState state = CampaignStatusStateFactory.getState(baseCampaign);
-        assertThat(state).isInstanceOf(ActiveCampaignStatusState.class);
+        assertThat(state).isInstanceOf(ActivatedCampaignStatusState.class);
     }
 
     @Test
     void factory_shouldReturnCorrectStateForInactive() {
+        baseCampaign.setStatus(CampaignStatus.INACTIVE.getValue());
         CampaignStatusState state = CampaignStatusStateFactory.getState(baseCampaign);
-        assertThat(state).isInstanceOf(InactiveCampaignStatusState.class);
+        assertThat(state).isInstanceOf(InactivatedCampaignStatusState.class);
     }
 
     @Test
