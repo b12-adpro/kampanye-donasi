@@ -6,20 +6,24 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public class DonationRepository {
     private final List<Donation> donationData = new ArrayList<>();
 
     public Donation save(Donation donation) {
-        int i = 0;
-        for (Donation d: donationData) {
-            if (d.getDonationId().equals(donation.getDonationId())) {
-                donationData.set(i, donation);
-                return donation;
+        if (donation.getDonationId() != null) {
+            int i = 0;
+            for (Donation d: donationData) {
+                if (d.getDonationId().equals(donation.getDonationId())) {
+                    donationData.set(i, donation);
+                    return donation;
+                }
+                i++;
             }
-            i++;
         }
+        donation.setDonationId(UUID.randomUUID().toString());
         donationData.add(donation);
         return donation;
     }
