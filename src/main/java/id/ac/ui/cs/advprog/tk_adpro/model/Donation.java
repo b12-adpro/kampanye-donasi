@@ -20,7 +20,7 @@ public class Donation {
     private String message;
 
     public Donation(String donationId, String campaignId, long donaturId, int amount, String status, LocalDateTime datetime, String message) {
-        validateCommonFields(donationId, campaignId, donaturId, amount, status);
+        validateCommonFields(campaignId, donaturId, amount, status);
         this.donationId = donationId;
         this.campaignId = campaignId;
         this.donaturId = donaturId;
@@ -34,18 +34,17 @@ public class Donation {
         this(donationId, campaignId, donaturId, amount, status, datetime, null);
     }
 
-    private void validateCommonFields(String donationId, String campaignId, long donaturId, int amount, String status) {
-        if (donationId == null || donationId.isEmpty()) {
-            throw new IllegalArgumentException("Id must not be null or empty!");
-        }
+    public Donation() {}
+
+    private void validateCommonFields(String campaignId, long donaturId, int amount, String status) {
         if (campaignId == null || campaignId.isEmpty()) {
             throw new IllegalArgumentException("Campaign Id must not be null or empty!");
         }
-        if (donaturId <= 0) {
-            throw new IllegalArgumentException("Donatur Id is not valid!");
+        if (donaturId < 0) {
+            throw new IllegalArgumentException("DonaturId is not valid!");
         }
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Amount must be greater than zero!");
+        if (amount < 0) {
+            throw new IllegalArgumentException("Amount cant be negative!");
         }
         if (!DonationStatus.contains(status)) {
             throw new IllegalArgumentException("Status is not valid!");
