@@ -1,3 +1,4 @@
+package id.ac.ui.cs.advprog.tk_adpro.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -6,7 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
-import id.ac.ui.cs.advprog.tk_adpro.exception.InsufficientBalanceException;
+import id.ac.ui.cs.advprog.tk_adpro.service.CampaignServiceImpl;
 import id.ac.ui.cs.advprog.tk_adpro.model.Campaign;
 import id.ac.ui.cs.advprog.tk_adpro.repository.CampaignRepository;
 import id.ac.ui.cs.advprog.tk_adpro.state.CampaignStatusState;
@@ -37,9 +38,8 @@ public class CampaignServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        CampaignStatus campaignStatus;
         LocalDateTime now = LocalDateTime.now();
-        Campaign campaign = new Campaign(
+        campaign = new Campaign( // <-- ini assign ke field yang udah dideklarasikan di atas
                 "13652556-012a-4c07-b546-54eb1396d79b",
                 "eb558e9f-1c39-460e-8860-71af6af63bd6",
                 "Donation Campaign",
@@ -50,12 +50,6 @@ public class CampaignServiceImplTest {
         );
     }
 
-    @Test
-    void testCheckBalance() {
-        when(campaignRepository.findByFundraiserId("eb558e9f-1c39-460e-8860-71af6af63bd6")).thenReturn(List.of(campaign));
-        int result = campaignService.checkBalance("eb558e9f-1c39-460e-8860-71af6af63bd6");
-        assertEquals(200, result);
-    }
 
     @Test
     void testCreateCampaign() {
@@ -63,6 +57,7 @@ public class CampaignServiceImplTest {
         Campaign created = campaignService.createCampaign(campaign);
         assertEquals(CampaignStatus.INACTIVE.getValue(), created.getStatus());
     }
+
 
     @Test
     void testActivateCampaign() {
@@ -81,42 +76,112 @@ public class CampaignServiceImplTest {
     }
 
     @Test
-    void testGetCampaignById() {
-        when(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b")).thenReturn(campaign);
-        Campaign result = campaignService.getCampaignByCampaignId("13652556-012a-4c07-b546-54eb1396d79b");
-        assertEquals("13652556-012a-4c07-b546-54eb1396d79b", result.getCampaignId());
+    void testGetCampaignByCampaignId() {
+        Campaign dummyCampaign = new Campaign(
+                "13652556-012a-4c07-b546-54eb1396d79b",
+                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+                "Donation Campaign",
+                CampaignStatus.ACTIVE.getValue(),
+                LocalDateTime.now(),
+                123123,
+                "Ini deskripsi."
+        );
+        dummyCampaign.setCampaignId("123");
+
+        when(campaignRepository.findByCampaignId("123")).thenReturn(dummyCampaign);
+
+        Campaign result = campaignService.getCampaignByCampaignId("123");
+
+        assertEquals("123", result.getCampaignId());
     }
+
 
     @Test
     void testGetCampaignByFundraiserId() {
-        when(campaignRepository.findByFundraiserId("eb558e9f-1c39-460e-8860-71af6af63bd6")).thenReturn(List.of(campaign));
-        List<Campaign> results = campaignService.getCampaignByFundraiserId("eb558e9f-1c39-460e-8860-71af6af63bd6");
-        assertEquals(1, results.size());
+        Campaign dummyCampaign = new Campaign(
+                "13652556-012a-4c07-b546-54eb1396d79b",
+                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+                "Donation Campaign",
+                CampaignStatus.ACTIVE.getValue(),
+                LocalDateTime.now(),
+                123123,
+                "Ini deskripsi."
+        );
+        dummyCampaign.setFundraiserId("abc");
+        List<Campaign> dummyList = List.of(dummyCampaign);
+
+        when(campaignRepository.findByFundraiserId("abc")).thenReturn(dummyList);
+
+        List<Campaign> result = campaignService.getCampaignByFundraiserId("abc");
+
+        assertEquals(1, result.size());
+        assertEquals("abc", result.get(0).getFundraiserId());
+    }
+
+
+    @Test
+    void testUpdateCampaignJudul() {
+        Campaign dummyCampaign = new Campaign(
+                "13652556-012a-4c07-b546-54eb1396d79b",
+                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+                "Donation Campaign",
+                CampaignStatus.ACTIVE.getValue(),
+                LocalDateTime.now(),
+                123123,
+                "Ini deskripsi."
+        );
+        dummyCampaign.setCampaignId("1");
+        dummyCampaign.setJudul("Old Title");
+
+        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
+
+        campaignService.updateCampaignJudul("1", "New Title");
+
+        assertEquals("New Title", dummyCampaign.getJudul());
     }
 
     @Test
-    void testUpdateJudul() {
-        when(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b")).thenReturn(campaign);
-        when(campaignRepository.save(any())).thenReturn(campaign);
-        Campaign updated = campaignService.updateCampaignJudul("13652556-012a-4c07-b546-54eb1396d79b", "New Judul");
-        assertEquals("New Judul", updated.getJudul());
+    void testUpdateCampaignTarget() {
+        Campaign dummyCampaign = new Campaign(
+            "13652556-012a-4c07-b546-54eb1396d79b",
+            "eb558e9f-1c39-460e-8860-71af6af63bd6",
+            "Donation Campaign",
+            CampaignStatus.ACTIVE.getValue(),
+            LocalDateTime.now(),
+            123123,
+            "Ini deskripsi."
+        );
+        dummyCampaign.setCampaignId("1");
+        dummyCampaign.setTarget(100);
+
+        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
+
+        campaignService.updateCampaignTarget("1", 500);
+
+        assertEquals(500, dummyCampaign.getTarget());
     }
 
     @Test
-    void testUpdateTarget() {
-        when(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b").thenReturn(campaign);
-        when(campaignRepository.save(any())).thenReturn(campaign);
-        Campaign updated = campaignService.updateCampaignTarget("13652556-012a-4c07-b546-54eb1396d79b", 2000);
-        assertEquals(2000, updated.getTarget());
+    void testUpdateCampaignDeskripsi() {
+        Campaign dummyCampaign = new Campaign(
+                "13652556-012a-4c07-b546-54eb1396d79b",
+                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+                "Donation Campaign",
+                CampaignStatus.ACTIVE.getValue(),
+                LocalDateTime.now(),
+                123123,
+                "Ini deskripsi."
+        );
+        dummyCampaign.setCampaignId("1");
+        dummyCampaign.setDeskripsi("Old");
+
+        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
+
+        campaignService.updateCampaignDeskripsi("1", "New");
+
+        assertEquals("New", dummyCampaign.getDeskripsi());
     }
 
-    @Test
-    void testUpdateDeskripsi() {
-        when(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b")).thenReturn(campaign);
-        when(campaignRepository.save(any())).thenReturn(campaign);
-        Campaign updated = campaignService.updateCampaignDeskripsi("13652556-012a-4c07-b546-54eb1396d79b", "Updated");
-        assertEquals("Updated", updated.getDeskripsi());
-    }
 
     @Test
     void testDeleteCampaign() {

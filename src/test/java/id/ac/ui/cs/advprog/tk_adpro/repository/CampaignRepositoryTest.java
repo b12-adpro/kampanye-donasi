@@ -96,10 +96,24 @@ class CampaignRepositoryTest {
 
     @Test
     void testDeleteByCampaignId_shouldRemoveCampaign() {
+        Campaign campaign = new Campaign(
+                "13652556-012a-4c07-b546-54eb1396d79b",
+                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+                "Donation Campaign",
+                CampaignStatus.ACTIVE.getValue(),
+                LocalDateTime.now(),
+                123123,
+                "Ini deskripsi."
+        );
+
+        campaignRepository.save(campaign);
+
         assertNotNull(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b"));
+
         campaignRepository.deleteByCampaignId("13652556-012a-4c07-b546-54eb1396d79b");
         assertNull(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b"));
     }
+
 
     @Test
     void testDeleteByCampaignId_nonExistingId_shouldDoNothing() {

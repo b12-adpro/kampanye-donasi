@@ -55,4 +55,5 @@ public class Campaign {
             throw new IllegalArgumentException("Target must be greater than zero!");
         }
     }
+
 }
