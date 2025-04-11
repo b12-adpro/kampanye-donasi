@@ -11,9 +11,27 @@ import java.util.List;
 public class CampaignRepository {
     private final List<Campaign> campaignData = new ArrayList<>();
 
-    public Campaign save(Campaign campaign) {return null;}
+    public Campaign save(Campaign campaign) {
+        int i = 0;
+        for (Campaign c: campaignData) {
+            if (c.getCampaignId().equals(campaign.getCampaignId())) {
+                campaignData.set(i, campaign);
+                return campaign;
+            }
+            i++;
+        }
+        campaignData.add(campaign);
+        return campaign;
+    }
 
-    public Campaign findByCampaignId(String id) {return null;}
+    public Campaign findByCampaignId(String id) {
+        for (Campaign c: campaignData) if (c.getCampaignId().equals(id)) return c;
+        return null;
+    }
 
-    public List<Campaign> findByFundraiserId(String fundraiserId) {return null;}
+    public List<Campaign> findByFundraiserId(String fundraiserId) {
+        List<Campaign> campaigns = new ArrayList<>();
+        for (Campaign c: campaignData) if (c.getFundraiserId().equals(fundraiserId)) campaigns.add(c);
+        return campaigns;
+    }
 }
