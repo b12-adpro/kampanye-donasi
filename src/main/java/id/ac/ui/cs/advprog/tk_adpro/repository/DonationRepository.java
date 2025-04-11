@@ -11,11 +11,33 @@ import java.util.List;
 public class DonationRepository {
     private final List<Donation> donationData = new ArrayList<>();
 
-    public Donation save(Donation donation) {return null;}
+    public Donation save(Donation donation) {
+        int i = 0;
+        for (Donation d: donationData) {
+            if (d.getDonationId().equals(donation.getDonationId())) {
+                donationData.set(i, donation);
+                return donation;
+            }
+            i++;
+        }
+        donationData.add(donation);
+        return donation;
+    }
 
-    public Donation findByDonationId(String id) {return null;}
+    public Donation findByDonationId(String id) {
+        for (Donation d: donationData) if (d.getDonationId().equals(id)) return d;
+        return null;
+    }
 
-    public List<Donation> findByCampaignId(String campaignId) {return null;}
+    public List<Donation> findByCampaignId(String campaignId) {
+        List<Donation> donations = new ArrayList<>();
+        for (Donation d: donationData) if (d.getCampaignId().equals(campaignId)) donations.add(d);
+        return donations;
+    }
 
-    public List<Donation> findByDonaturId(long donaturId) {return null;}
+    public List<Donation> findByDonaturId(long donaturId) {
+        List<Donation> donations = new ArrayList<>();
+        for (Donation d: donationData) if (d.getDonaturId()== donaturId) donations.add(d);
+        return donations;
+    }
 }
