@@ -43,7 +43,7 @@ class DonationTest {
                 "Donation Campaign",
                 status,
                 now,
-                123123,
+                123123
         );
 
         assertNotNull(campaign);
@@ -151,7 +151,7 @@ class DonationTest {
                 status,
                 now,
                 123123,
-                "Ini Deskripsi."
+                "Ini deskripsi."
         );
 
         assertNotNull(campaign);
@@ -175,7 +175,7 @@ class DonationTest {
                 status,
                 now,
                 123123,
-                "Ini Deskripsi."
+                "Ini deskripsi."
         );
 
         assertNotNull(campaign);
@@ -195,6 +195,7 @@ class DonationTest {
                 "13652556-012a-4c07-b546-54eb1396d79b",
                 "eb558e9f-1c39-460e-8860-71af6af63bd6",
                 "Donation Campaign",
+                "",
                 now,
                 12,
                 "Ga valid bang"
