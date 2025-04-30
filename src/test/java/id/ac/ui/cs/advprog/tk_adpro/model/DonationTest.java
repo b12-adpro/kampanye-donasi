@@ -280,4 +280,17 @@ class DonationTest {
             now
         ));
     }
+
+    @Test
+    void testDefaultConstructor() {
+        Donation donation = new Donation();
+        assertNotNull(donation);
+        assertNull(donation.getDonationId());
+        assertNull(donation.getCampaignId());
+        assertEquals(0L, donation.getDonaturId());
+        assertEquals(0, donation.getAmount());
+        assertNull(donation.getStatus());
+        assertNull(donation.getDatetime());
+        assertNull(donation.getMessage());
+    }
 }
