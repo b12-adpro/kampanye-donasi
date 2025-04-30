@@ -188,7 +188,7 @@ class DonationTest {
         LocalDateTime now = LocalDateTime.now();
         assertThrows(IllegalArgumentException.class, () -> new Donation(
             "13652556-012a-4c07-b546-54eb1396d79b",
-            "",
+            "abc",
             -1L,
             1,
             status,
