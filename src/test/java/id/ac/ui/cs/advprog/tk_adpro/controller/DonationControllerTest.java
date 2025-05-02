@@ -85,7 +85,7 @@ class DonationControllerTest {
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .flashAttr("donation", donation))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+                .andExpect(redirectedUrl("/donation/get-by-id/" + donation.getDonationId()));
 
         verify(donationService).createDonation(any(Donation.class));
     }
@@ -96,7 +96,7 @@ class DonationControllerTest {
 
         mockMvc.perform(put("/donation/{donationId}/complete", donationId))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+                .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
 
         verify(donationService).completeDonation(donationId);
     }
@@ -106,7 +106,7 @@ class DonationControllerTest {
         String donationId = "donation123";
         mockMvc.perform(put("/donation/{donationId}/cancel", donationId))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+                .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
         verify(donationService).cancelDonation(donationId);
     }
 
