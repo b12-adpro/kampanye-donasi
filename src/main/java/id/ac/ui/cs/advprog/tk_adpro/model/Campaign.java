@@ -3,14 +3,14 @@ package id.ac.ui.cs.advprog.tk_adpro.model;
 import java.time.LocalDateTime;
 
 import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
+import lombok.*;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
+@Getter
+@Setter
+@NoArgsConstructor
 @Builder
-@Getter @Setter
 public class Campaign {
+
     private String campaignId;
     private String fundraiserId;
     private String judul;
@@ -31,7 +31,7 @@ public class Campaign {
     }
 
     public Campaign(String campaignId, String fundraiserId, String judul, String status, LocalDateTime datetime, int target) {
-        this(campaignId, fundraiserId, judul, status, datetime, target,null);
+        this(campaignId, fundraiserId, judul, status, datetime, target, null);
     }
 
     private void validateCommonFields(String campaignId, String fundraiserId, String judul, String status, int target) {
@@ -55,5 +55,4 @@ public class Campaign {
             throw new IllegalArgumentException("Target must be greater than zero!");
         }
     }
-
 }
