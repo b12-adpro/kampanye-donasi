@@ -157,4 +157,34 @@ class DonationControllerTest {
                 .andExpect(view().name("DonationList"))
                 .andExpect(model().attributeExists("donations"));
     }
+
+    @Test
+    void testUpdateDonationMessage() throws Exception {
+        String donationId = "donation456";
+        String message = "Thank you for your support!";
+        Donation donation = new Donation(donationId, "campaign789", 123L, 1000, DonationStatus.PENDING.getValue(), LocalDateTime.now());
+        donation.setMessage(message);
+
+        mockMvc.perform(put("/donation/update-message")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(donation)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
+
+        verify(donationService).updateDonationMessage(donationId, message);
+    }
+
+    @Test
+    void testDeleteDonationMessage() throws Exception {
+        String donationId = "donation789";
+        Donation donation = new Donation(donationId, "campaign123", 456L, 2000, DonationStatus.PENDING.getValue(), LocalDateTime.now());
+
+        mockMvc.perform(put("/donation/delete-message")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(donation)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
+
+        verify(donationService).deleteDonationMessage(donationId);
+    }
 }
