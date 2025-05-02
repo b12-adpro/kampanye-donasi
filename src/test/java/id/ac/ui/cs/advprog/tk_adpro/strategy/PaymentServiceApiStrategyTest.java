@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -22,24 +23,20 @@ import org.springframework.web.client.RestTemplate;
 import id.ac.ui.cs.advprog.tk_adpro.exception.PaymentServiceException;
 
 class PaymentServiceApiStrategyTest {
-    private RestTemplateBuilder restTemplateBuilder;
     private RestTemplate restTemplate;
     private PaymentServiceApiStrategy paymentServiceApiStrategy;
 
     @BeforeEach
     void setUp() {
-        restTemplateBuilder = mock(RestTemplateBuilder.class);
+        RestTemplateBuilder restTemplateBuilder = mock(RestTemplateBuilder.class);
         restTemplate = mock(RestTemplate.class);
 
-        // Stub the builder to return our mocked RestTemplate.
         when(restTemplateBuilder.connectTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
         when(restTemplateBuilder.readTimeout(any(Duration.class))).thenReturn(restTemplateBuilder);
         when(restTemplateBuilder.build()).thenReturn(restTemplate);
 
         paymentServiceApiStrategy = new PaymentServiceApiStrategy(restTemplateBuilder);
     }
-
-    // ----- checkBalance Tests -----
 
     @Test
     void testCheckBalanceSuccess() {
@@ -50,10 +47,10 @@ class PaymentServiceApiStrategyTest {
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/checkBalance"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/checkBalance"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenReturn(responseEntity);
 
         int balance = paymentServiceApiStrategy.checkBalance(donaturId);
@@ -69,15 +66,15 @@ class PaymentServiceApiStrategyTest {
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/checkBalance"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/checkBalance"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenReturn(responseEntity);
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
-            paymentServiceApiStrategy.checkBalance(donaturId);
-        });
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.checkBalance(donaturId)
+        );
         assertTrue(exception.getMessage().contains("Invalid balance format"));
     }
 
@@ -86,15 +83,15 @@ class PaymentServiceApiStrategyTest {
         long donaturId = 1L;
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/checkBalance"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/checkBalance"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request"));
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
-            paymentServiceApiStrategy.checkBalance(donaturId);
-        });
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.checkBalance(donaturId)
+        );
         assertTrue(exception.getMessage().contains("Payment service returned an error"));
     }
 
@@ -103,19 +100,57 @@ class PaymentServiceApiStrategyTest {
         long donaturId = 1L;
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/checkBalance"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/checkBalance"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenThrow(new ResourceAccessException("Connection refused"));
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
-            paymentServiceApiStrategy.checkBalance(donaturId);
-        });
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.checkBalance(donaturId)
+        );
         assertTrue(exception.getMessage().contains("Cannot connect to payment service"));
     }
 
-    // ----- processPayment Tests -----
+    @Test
+    void testCheckBalanceStatusNotOk() {
+        long donaturId = 2L;
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("balance", 50);
+
+        ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        when(restTemplate.exchange(
+            eq("http://dummy-payment-service.com/api/checkBalance"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
+        )).thenReturn(responseEntity);
+
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.checkBalance(donaturId)
+        );
+
+        assertTrue(exception.getMessage().contains("Status: 500 INTERNAL_SERVER_ERROR"));
+    }
+
+    @Test
+    void testCheckBalanceNullBody() {
+        long donaturId = 3L;
+        ResponseEntity<Map> responseEntity = new ResponseEntity<>(null, HttpStatus.OK);
+
+        when(restTemplate.exchange(
+            eq("http://dummy-payment-service.com/api/checkBalance"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
+        )).thenReturn(responseEntity);
+
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.checkBalance(donaturId)
+        );
+        assertTrue(exception.getMessage().contains("Failed to check balance from payment service"));
+    }
 
     @Test
     void testProcessPaymentSuccess() {
@@ -127,10 +162,10 @@ class PaymentServiceApiStrategyTest {
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/processPayment"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenReturn(responseEntity);
 
         boolean result = paymentServiceApiStrategy.processPayment(donaturId, amount);
@@ -147,10 +182,10 @@ class PaymentServiceApiStrategyTest {
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/processPayment"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenReturn(responseEntity);
 
         boolean result = paymentServiceApiStrategy.processPayment(donaturId, amount);
@@ -167,15 +202,15 @@ class PaymentServiceApiStrategyTest {
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/processPayment"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenReturn(responseEntity);
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
-            paymentServiceApiStrategy.processPayment(donaturId, amount);
-        });
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.processPayment(donaturId, amount)
+        );
         assertTrue(exception.getMessage().contains("Invalid response format"));
     }
 
@@ -185,15 +220,15 @@ class PaymentServiceApiStrategyTest {
         int amount = 50;
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/processPayment"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request"));
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
-            paymentServiceApiStrategy.processPayment(donaturId, amount);
-        });
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.processPayment(donaturId, amount)
+        );
         assertTrue(exception.getMessage().contains("Payment service returned an error"));
     }
 
@@ -203,15 +238,57 @@ class PaymentServiceApiStrategyTest {
         int amount = 50;
 
         when(restTemplate.exchange(
-                eq("http://dummy-payment-service.com/api/processPayment"),
-                eq(HttpMethod.POST),
-                any(HttpEntity.class),
-                eq(Map.class)
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
         )).thenThrow(new ResourceAccessException("Connection refused"));
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
-            paymentServiceApiStrategy.processPayment(donaturId, amount);
-        });
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.processPayment(donaturId, amount)
+        );
         assertTrue(exception.getMessage().contains("Cannot connect to payment service"));
+    }
+
+    @Test
+    void testProcessPaymentStatusNotOk() {
+        long donaturId = 4L;
+        int amount = 75;
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("success", true);
+
+        ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.SERVICE_UNAVAILABLE);
+
+        when(restTemplate.exchange(
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
+        )).thenReturn(responseEntity);
+
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.processPayment(donaturId, amount)
+        );
+        assertTrue(exception.getMessage().contains("Status: 503 SERVICE_UNAVAILABLE"));
+    }
+
+    @Test
+    void testProcessPaymentNullBody() {
+        long donaturId = 5L;
+        int amount = 30;
+
+        ResponseEntity<Map> responseEntity = new ResponseEntity<>(null, HttpStatus.OK);
+
+        when(restTemplate.exchange(
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
+        )).thenReturn(responseEntity);
+
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
+            paymentServiceApiStrategy.processPayment(donaturId, amount)
+        );
+        assertTrue(exception.getMessage().contains("Failed to process payment. Status"));
     }
 }

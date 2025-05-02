@@ -39,21 +39,21 @@ public class DonationController {
     }
 
     @PostMapping("/{donationId}/create-donation")
-    public String createDonation(@PathVariable String donationId, @ModelAttribute Donation donation) {
+    public String createDonation(@PathVariable String donationId, @ModelAttribute("donation") Donation donation) {
         donationService.createDonation(donation);
-        return "redirect:/";
+        return "redirect:/donation/get-by-id/" + donationId;
     }
 
     @PutMapping("/{donationId}/complete")
     public String completeDonation(@PathVariable String donationId) {
         donationService.completeDonation(donationId);
-        return "redirect:/";
+        return "redirect:/donation/get-by-id/" + donationId;
     }
 
     @PutMapping("/{donationId}/cancel")
     public String cancelDonation(@PathVariable String donationId) {
         donationService.cancelDonation(donationId);
-        return "redirect:/";
+        return "redirect:/donation/get-by-id/" + donationId;
     }
 
     @GetMapping("/get-by-id/{donationId}")

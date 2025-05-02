@@ -25,10 +25,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 @Service
 public class PaymentServiceApiStrategy implements PaymentStrategy {
     private static final Logger logger = LoggerFactory.getLogger(PaymentServiceApiStrategy.class);
-    
     private static final String CHECK_BALANCE_URL = "http://dummy-payment-service.com/api/checkBalance";
     private static final String PROCESS_PAYMENT_URL = "http://dummy-payment-service.com/api/processPayment";
-    
     private final RestTemplate restTemplate;
 
     @Autowired
@@ -55,12 +53,12 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
 
             // Send POST request to the checkBalance API
             logger.debug("Sending balance check request to: {}", CHECK_BALANCE_URL);
-            
+
             ResponseEntity<Map> response = restTemplate.exchange(
-                    CHECK_BALANCE_URL,
-                    HttpMethod.POST,
-                    requestEntity,
-                    Map.class
+                CHECK_BALANCE_URL,
+                HttpMethod.POST,
+                requestEntity,
+                Map.class
             );
 
             // Process response
@@ -106,12 +104,12 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
 
             // Send POST request to the processPayment API
             logger.debug("Processing payment request to: {} for donatur: {} amount: {}", PROCESS_PAYMENT_URL, donaturId, amount);
-            
+
             ResponseEntity<Map> response = restTemplate.exchange(
-                    PROCESS_PAYMENT_URL,
-                    HttpMethod.POST,
-                    requestEntity,
-                    Map.class
+                PROCESS_PAYMENT_URL,
+                HttpMethod.POST,
+                requestEntity,
+                Map.class
             );
 
             // Process response

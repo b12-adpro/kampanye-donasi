@@ -41,7 +41,7 @@ public class DonationRepository {
 
     public List<Donation> findByDonaturId(long donaturId) {
         List<Donation> donations = new ArrayList<>();
-        for (Donation d: donationData) if (d.getDonaturId()== donaturId) donations.add(d);
+        for (Donation d: donationData) if (d.getDonaturId() == donaturId) donations.add(d);
         return donations;
     }
 }

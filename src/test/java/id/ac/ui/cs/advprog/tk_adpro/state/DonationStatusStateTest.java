@@ -15,38 +15,29 @@ class DonationStatusStateTest {
     @BeforeEach
     void setUp() {
         baseDonation = new Donation(
-            "don1", "camp1", 123L, 1000,
+            "don1",
+            "camp1",
+            123L,
+            1000,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
             "Test donation"
         );
     }
 
-    // ---------------------------
-    // ✅ PENDING state tests
-    // ---------------------------
-
     @Test
     void pendingDonation_canBeCancelled() {
         DonationStatusState state = new PendingDonationStatusState();
-
         state.cancel(baseDonation);
-
         assertThat(baseDonation.getStatus()).isEqualTo(DonationStatus.CANCELLED.getValue());
     }
 
     @Test
     void pendingDonation_canBeCompleted() {
         DonationStatusState state = new PendingDonationStatusState();
-
         state.complete(baseDonation);
-
         assertThat(baseDonation.getStatus()).isEqualTo(DonationStatus.COMPLETED.getValue());
     }
-
-    // ---------------------------
-    // ❌ CANCELLED state tests
-    // ---------------------------
 
     @Test
     void cancelledDonation_cannotBeCancelledAgain() {
@@ -68,10 +59,6 @@ class DonationStatusStateTest {
             .hasMessageContaining("cannot be completed");
     }
 
-    // ---------------------------
-    // ❌ COMPLETED state tests
-    // ---------------------------
-
     @Test
     void completedDonation_cannotBeCancelled() {
         baseDonation.setStatus(DonationStatus.COMPLETED.getValue());
@@ -91,10 +78,6 @@ class DonationStatusStateTest {
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("already completed");
     }
-
-    // ---------------------------
-    // ✅ Factory Test
-    // ---------------------------
 
     @Test
     void factory_shouldReturnCorrectStateForPending() {
@@ -119,7 +102,6 @@ class DonationStatusStateTest {
     @Test
     void factory_shouldThrowOnUnknownStatus() {
         baseDonation.setStatus("UNKNOWN_STATUS");
-
         assertThatThrownBy(() -> DonationStatusStateFactory.getState(baseDonation))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("Unknown donation status");

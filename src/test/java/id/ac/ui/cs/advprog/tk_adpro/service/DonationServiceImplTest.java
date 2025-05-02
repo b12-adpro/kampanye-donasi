@@ -7,8 +7,10 @@ import id.ac.ui.cs.advprog.tk_adpro.repository.DonationRepository;
 import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusState;
 import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusStateFactory;
 import id.ac.ui.cs.advprog.tk_adpro.strategy.PaymentStrategy;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.Mock;
 import org.mockito.InjectMocks;
 import org.mockito.MockedStatic;
@@ -23,7 +25,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DonationServiceImplTest {
-
     @Mock
     private DonationRepository donationRepository;
 
@@ -128,13 +129,13 @@ class DonationServiceImplTest {
     @Test
     void testCompleteDonation() {
         Donation donation = new Donation(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                123L,
-                169500,
-                DonationStatus.PENDING.getValue(),
-                LocalDateTime.now(),
-                "Get well soon!"
+            "13652556-012a-4c07-b546-54eb1396d79b",
+            "eb558e9f-1c39-460e-8860-71af6af63bd6",
+            123L,
+            169500,
+            DonationStatus.PENDING.getValue(),
+            LocalDateTime.now(),
+            "Get well soon!"
         );
 
         DonationStatusState mockState = mock(DonationStatusState.class);
@@ -144,14 +145,10 @@ class DonationServiceImplTest {
         }).when(mockState).complete(any(Donation.class));
 
         try (MockedStatic<DonationStatusStateFactory> factoryMock = mockStatic(DonationStatusStateFactory.class)) {
-            // Stub the repository call to return the donation instance.
             when(donationRepository.findByDonationId(donation.getDonationId())).thenReturn(donation);
+    
+            factoryMock.when(() -> DonationStatusStateFactory.getState(donation)).thenReturn(mockState);
 
-            // Stub the static factory method for that same donation.
-            factoryMock.when(() -> DonationStatusStateFactory.getState(donation))
-                    .thenReturn(mockState);
-
-            // Stub payment and save
             when(paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount())).thenReturn(true);
             when(donationRepository.save(donation)).thenReturn(donation);
 
@@ -167,30 +164,25 @@ class DonationServiceImplTest {
     @Test
     void testCancelDonation() {
         Donation donation = new Donation(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                123L,
-                169500,
-                DonationStatus.PENDING.getValue(),
-                LocalDateTime.now(),
-                "Get well soon!"
+            "13652556-012a-4c07-b546-54eb1396d79b",
+            "eb558e9f-1c39-460e-8860-71af6af63bd6",
+            123L,
+            169500,
+            DonationStatus.PENDING.getValue(),
+            LocalDateTime.now(),
+            "Get well soon!"
         );
 
-        // Create a mock state to simulate cancellation.
         DonationStatusState mockState = mock(DonationStatusState.class);
         doAnswer(invocation -> {
-            // Assume that cancellation sets status to "CANCELLED"
             donation.setStatus(DonationStatus.CANCELLED.getValue());
             return null;
         }).when(mockState).cancel(any(Donation.class));
 
         try (MockedStatic<DonationStatusStateFactory> factoryMock = mockStatic(DonationStatusStateFactory.class)) {
-            // Stub the repository call to return the donation instance.
             when(donationRepository.findByDonationId(donation.getDonationId())).thenReturn(donation);
 
-            // Make sure the factory returns our mockState when the retrieved donation is passed.
-            factoryMock.when(() -> DonationStatusStateFactory.getState(donation))
-                    .thenReturn(mockState);
+            factoryMock.when(() -> DonationStatusStateFactory.getState(donation)).thenReturn(mockState);
 
             when(donationRepository.save(donation)).thenReturn(donation);
 

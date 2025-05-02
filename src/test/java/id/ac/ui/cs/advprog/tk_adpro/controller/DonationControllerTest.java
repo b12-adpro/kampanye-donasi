@@ -24,16 +24,16 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;  // Change to MockBean
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @WebMvcTest(DonationController.class)
 class DonationControllerTest {
     @Autowired
     private MockMvc mockMvc;
-    
-    @MockBean
+
+    @MockitoBean
     private DonationService donationService;
 
     @Autowired
@@ -44,9 +44,9 @@ class DonationControllerTest {
         String campaignId = "campaign123";
 
         mockMvc.perform(get("/donation/{campaignId}/donate", campaignId))
-                .andExpect(status().isOk())
-                .andExpect(view().name("DonationForm"))
-                .andExpect(model().attributeExists("donation"));
+            .andExpect(status().isOk())
+            .andExpect(view().name("DonationForm"))
+            .andExpect(model().attributeExists("donation"));
     }
 
     @Test
@@ -61,11 +61,10 @@ class DonationControllerTest {
         );
         
         mockMvc.perform(post("/donation/{campaignId}/donate", donation.getCampaignId())
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        // simulate form binding; here you can pass parameters if needed
-                        .flashAttr("donation", donation))
-                .andExpect(status().isOk())
-                .andExpect(view().name("VerifyDonation"));
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .flashAttr("donation", donation))
+            .andExpect(status().isOk())
+            .andExpect(view().name("VerifyDonation"));
 
         verify(donationService).createDonation(any(Donation.class));
     }
@@ -82,10 +81,10 @@ class DonationControllerTest {
         );
 
         mockMvc.perform(post("/donation/{donationId}/create-donation", donation.getDonationId())
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .flashAttr("donation", donation))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .flashAttr("donation", donation))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/donation/get-by-id/" + donation.getDonationId()));
 
         verify(donationService).createDonation(any(Donation.class));
     }
@@ -95,8 +94,8 @@ class DonationControllerTest {
         String donationId = "donation123";
 
         mockMvc.perform(put("/donation/{donationId}/complete", donationId))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
 
         verify(donationService).completeDonation(donationId);
     }
@@ -105,8 +104,8 @@ class DonationControllerTest {
     void testCancelDonation() throws Exception {
         String donationId = "donation123";
         mockMvc.perform(put("/donation/{donationId}/cancel", donationId))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
         verify(donationService).cancelDonation(donationId);
     }
 
@@ -124,9 +123,9 @@ class DonationControllerTest {
         when(donationService.getDonationByDonationId(donation.getDonationId())).thenReturn(donation);
 
         mockMvc.perform(get("/donation/get-by-id/{donationId}", donation.getDonationId()))
-                .andExpect(status().isOk())
-                .andExpect(view().name("DonationDetail"))
-                .andExpect(model().attributeExists("donation"));
+            .andExpect(status().isOk())
+            .andExpect(view().name("DonationDetail"))
+            .andExpect(model().attributeExists("donation"));
     }
 
     @Test
@@ -153,8 +152,38 @@ class DonationControllerTest {
         when(donationService.getDonationsByCampaignId(campaignId)).thenReturn(donations);
 
         mockMvc.perform(get("/donation/get-by-campaign/{campaignId}", campaignId))
-                .andExpect(status().isOk())
-                .andExpect(view().name("DonationList"))
-                .andExpect(model().attributeExists("donations"));
+            .andExpect(status().isOk())
+            .andExpect(view().name("DonationList"))
+            .andExpect(model().attributeExists("donations"));
+    }
+
+    @Test
+    void testUpdateDonationMessage() throws Exception {
+        String donationId = "donation456";
+        String message = "Thank you for your support!";
+        Donation donation = new Donation(donationId, "campaign789", 123L, 1000, DonationStatus.PENDING.getValue(), LocalDateTime.now());
+        donation.setMessage(message);
+
+        mockMvc.perform(put("/donation/update-message")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(donation)))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
+
+        verify(donationService).updateDonationMessage(donationId, message);
+    }
+
+    @Test
+    void testDeleteDonationMessage() throws Exception {
+        String donationId = "donation789";
+        Donation donation = new Donation(donationId, "campaign123", 456L, 2000, DonationStatus.PENDING.getValue(), LocalDateTime.now());
+
+        mockMvc.perform(put("/donation/delete-message")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(donation)))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
+
+        verify(donationService).deleteDonationMessage(donationId);
     }
 }
