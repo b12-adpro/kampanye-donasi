@@ -39,7 +39,7 @@ public class DonationController {
     }
 
     @PostMapping("/{donationId}/create-donation")
-    public String createDonation(@PathVariable String donationId, @ModelAttribute Donation donation) {
+    public String createDonation(@PathVariable String donationId, @ModelAttribute("donation") Donation donation) {
         donationService.createDonation(donation);
         return "redirect:/donation/get-by-id/" + donationId;
     }
