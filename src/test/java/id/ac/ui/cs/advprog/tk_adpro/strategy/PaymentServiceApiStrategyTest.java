@@ -115,6 +115,49 @@ class PaymentServiceApiStrategyTest {
         assertTrue(exception.getMessage().contains("Cannot connect to payment service"));
     }
 
+    // New test: response status not OK
+    @Test
+    void testCheckBalanceStatusNotOk() {
+        long donaturId = 2L;
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("balance", 50);
+        // Simulate non-200 status
+        ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+
+        when(restTemplate.exchange(
+                eq("http://dummy-payment-service.com/api/checkBalance"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(responseEntity);
+
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
+            paymentServiceApiStrategy.checkBalance(donaturId);
+        });
+        // Verify message mentions status code
+        assertTrue(exception.getMessage().contains("Status: 500 INTERNAL_SERVER_ERROR"));
+    }
+
+    // New test: null response body
+    @Test
+    void testCheckBalanceNullBody() {
+        long donaturId = 3L;
+        // Simulate OK status but null body
+        ResponseEntity<Map> responseEntity = new ResponseEntity<>(null, HttpStatus.OK);
+
+        when(restTemplate.exchange(
+                eq("http://dummy-payment-service.com/api/checkBalance"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(responseEntity);
+
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
+            paymentServiceApiStrategy.checkBalance(donaturId);
+        });
+        assertTrue(exception.getMessage().contains("Failed to check balance from payment service"));
+    }
+
     // ----- processPayment Tests -----
 
     @Test
@@ -213,5 +256,49 @@ class PaymentServiceApiStrategyTest {
             paymentServiceApiStrategy.processPayment(donaturId, amount);
         });
         assertTrue(exception.getMessage().contains("Cannot connect to payment service"));
+    }
+
+    // New test: response status not OK for payment
+    @Test
+    void testProcessPaymentStatusNotOk() {
+        long donaturId = 4L;
+        int amount = 75;
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("success", true);
+        // Simulate non-200 status
+        ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.SERVICE_UNAVAILABLE);
+
+        when(restTemplate.exchange(
+                eq("http://dummy-payment-service.com/api/processPayment"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(responseEntity);
+
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
+            paymentServiceApiStrategy.processPayment(donaturId, amount);
+        });
+        assertTrue(exception.getMessage().contains("Status: 503 SERVICE_UNAVAILABLE"));
+    }
+
+    // New test: null response body for payment
+    @Test
+    void testProcessPaymentNullBody() {
+        long donaturId = 5L;
+        int amount = 30;
+        // Simulate OK status but null body
+        ResponseEntity<Map> responseEntity = new ResponseEntity<>(null, HttpStatus.OK);
+
+        when(restTemplate.exchange(
+                eq("http://dummy-payment-service.com/api/processPayment"),
+                eq(HttpMethod.POST),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(responseEntity);
+
+        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () -> {
+            paymentServiceApiStrategy.processPayment(donaturId, amount);
+        });
+        assertTrue(exception.getMessage().contains("Failed to process payment. Status"));
     }
 }
