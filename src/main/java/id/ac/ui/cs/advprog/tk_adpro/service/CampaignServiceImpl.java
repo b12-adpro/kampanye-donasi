@@ -44,7 +44,6 @@ public class CampaignServiceImpl implements CampaignService {
         return campaign;
     }
 
-
     @Override
     public List<Campaign> getCampaignByFundraiserId(String fundraiserId) {
         return campaignRepository.findByFundraiserId(fundraiserId);
