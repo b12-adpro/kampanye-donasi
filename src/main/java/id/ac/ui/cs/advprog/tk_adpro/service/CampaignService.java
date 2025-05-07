@@ -10,9 +10,7 @@ public interface CampaignService {
     void inactivateCampaign(String campaignId);
     Campaign getCampaignByCampaignId(String campaignId);
     List<Campaign> getCampaignByFundraiserId(String fundraiserId);
-    Campaign updateCampaignJudul(String campaignId, String newJudul);
-    Campaign updateCampaignTarget(String campaignId, int newTarget);
-    Campaign updateCampaignDeskripsi(String campaignId, String newDeskripsi);
+    Campaign updateCampaign(Campaign campaign);
     void deleteCampaign(String campaignId);
 }
 

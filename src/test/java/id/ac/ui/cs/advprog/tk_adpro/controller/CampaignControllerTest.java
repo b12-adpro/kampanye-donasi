@@ -62,7 +62,7 @@ public class CampaignControllerTest {
 
         when(campaignService.createCampaign(any(Campaign.class))).thenReturn(campaign);
 
-        mockMvc.perform(post("/api/campaign/{campaignId}/create-campaign", campaign.getCampaignId())
+        mockMvc.perform(post("/api/campaign/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaign)))
                 .andExpect(status().isCreated())
@@ -100,7 +100,7 @@ public class CampaignControllerTest {
 
         when(campaignService.getCampaignByFundraiserId(fundraiserId)).thenReturn(Arrays.asList(c1, c2));
 
-        mockMvc.perform(get("/api/campaign/get-by-fundraiser/{fundraiserId}", fundraiserId))
+        mockMvc.perform(get("/api/campaign/fundraiserId/{fundraiserId}", fundraiserId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].campaignId").value("1"));
@@ -112,45 +112,24 @@ public class CampaignControllerTest {
 
         when(campaignService.getCampaignByCampaignId("c123")).thenReturn(campaign);
 
-        mockMvc.perform(get("/api/campaign/get-by-id/{campaignId}", "c123"))
+        mockMvc.perform(get("/api/campaign/campaignId/{campaignId}", "c123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.campaignId").value("c123"));
     }
 
     @Test
-    public void testUpdateCampaignJudul() throws Exception {
+    public void testUpdateCampaign() throws Exception {
         Campaign campaign = new Campaign("123", "f1", "Updated", "ACTIVE", LocalDateTime.now(), 100, "desc");
-
-        mockMvc.perform(put("/api/campaign/update-judul")
+        mockMvc.perform(put("/api/campaign/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaign)))
                 .andExpect(status().isOk());
 
-        Mockito.verify(campaignService).updateCampaignJudul("123", "Updated");
-    }
-
-    @Test
-    public void testUpdateCampaignTarget() throws Exception {
-        Campaign campaign = new Campaign("123", "f1", "Judul", "ACTIVE", LocalDateTime.now(), 50000, "desc");
-
-        mockMvc.perform(put("/api/campaign/update-target")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(campaign)))
-                .andExpect(status().isOk());
-
-        Mockito.verify(campaignService).updateCampaignTarget("123", 50000);
-    }
-
-    @Test
-    public void testUpdateCampaignDeskripsi() throws Exception {
-        Campaign campaign = new Campaign("123", "f1", "Judul", "ACTIVE", LocalDateTime.now(), 123, "Updated Desc");
-
-        mockMvc.perform(put("/api/campaign/update-deskripsi")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(campaign)))
-                .andExpect(status().isOk());
-
-        Mockito.verify(campaignService).updateCampaignDeskripsi("123", "Updated Desc");
+        Mockito.verify(campaignService).updateCampaign(Mockito.argThat(updated ->
+            updated.getJudul().equals("Updated") &&
+            updated.getTarget() == 100 &&
+                    updated.getDeskripsi().equals("desc")
+        ));
     }
 
     @Test

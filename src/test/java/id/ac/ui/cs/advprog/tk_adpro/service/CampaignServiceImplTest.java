@@ -118,9 +118,8 @@ public class CampaignServiceImplTest {
         assertEquals("abc", result.get(0).getFundraiserId());
     }
 
-
     @Test
-    void testUpdateCampaignJudul() {
+    void testUpdateCampaign() {
         Campaign dummyCampaign = new Campaign(
                 "13652556-012a-4c07-b546-54eb1396d79b",
                 "eb558e9f-1c39-460e-8860-71af6af63bd6",
@@ -130,58 +129,19 @@ public class CampaignServiceImplTest {
                 123123,
                 "Ini deskripsi."
         );
+
         dummyCampaign.setCampaignId("1");
-        dummyCampaign.setJudul("Old Title");
-
-        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
-
-        campaignService.updateCampaignJudul("1", "New Title");
-
-        assertEquals("New Title", dummyCampaign.getJudul());
-    }
-
-    @Test
-    void testUpdateCampaignTarget() {
-        Campaign dummyCampaign = new Campaign(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            "Donation Campaign",
-            CampaignStatus.ACTIVE.getValue(),
-            LocalDateTime.now(),
-            123123,
-            "Ini deskripsi."
-        );
-        dummyCampaign.setCampaignId("1");
+        dummyCampaign.setJudul("New Title");
         dummyCampaign.setTarget(100);
+        dummyCampaign.setDeskripsi("New Deskripsi");
 
-        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
+        when(campaignRepository.save(dummyCampaign)).thenReturn(dummyCampaign);
 
-        campaignService.updateCampaignTarget("1", 500);
-
-        assertEquals(500, dummyCampaign.getTarget());
+        Campaign updatedCampaign = campaignService.updateCampaign(dummyCampaign);
+        assertEquals("New Title", updatedCampaign.getJudul());
+        assertEquals(100, updatedCampaign.getTarget());
+        assertEquals("New Deskripsi", updatedCampaign.getDeskripsi());
     }
-
-    @Test
-    void testUpdateCampaignDeskripsi() {
-        Campaign dummyCampaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        dummyCampaign.setCampaignId("1");
-        dummyCampaign.setDeskripsi("Old");
-
-        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
-
-        campaignService.updateCampaignDeskripsi("1", "New");
-
-        assertEquals("New", dummyCampaign.getDeskripsi());
-    }
-
 
     @Test
     void testDeleteCampaign() {
