@@ -1,30 +1,9 @@
 package id.ac.ui.cs.advprog.tk_adpro.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-
-import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
-import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
-import id.ac.ui.cs.advprog.tk_adpro.model.Campaign;
-import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
-import id.ac.ui.cs.advprog.tk_adpro.service.CampaignService;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
-import id.ac.ui.cs.advprog.tk_adpro.service.DonationService;
+import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
+import id.ac.ui.cs.advprog.tk_adpro.model.Campaign;
+import id.ac.ui.cs.advprog.tk_adpro.service.CampaignService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +12,19 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 @WebMvcTest(CampaignController.class)
 public class CampaignControllerTest {
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -45,35 +35,20 @@ public class CampaignControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void testCreateCampaignPage() throws Exception {
-        String fundraiserId = "fundraiser123";
-        Campaign campaign = new Campaign();
-        campaign.setFundraiserId(fundraiserId);
-        campaign.setCampaignId(UUID.randomUUID().toString());
-
-        mockMvc.perform(get("/campaign/{fundraiserId}/create-campaign-page", fundraiserId))
-                .andExpect(status().isOk())
-                .andExpect(view().name("CampaignForm"))
-                .andExpect(model().attributeExists("campaign"));
-    }
-
-    @Test
     void testVerifyCampaign() throws Exception {
         Campaign campaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                "Donation Campaign",
+                "campaign123", "fundraiser123", "Judul",
                 CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
+                LocalDateTime.now(), 100000, "Deskripsi");
 
-        mockMvc.perform(post("/campaign/{fundraiserId}/campaign", campaign.getFundraiserId())
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .flashAttr("campaign", campaign))
-                .andExpect(status().isOk())
-                .andExpect(view().name("VerifyCampaign"));
+        when(campaignService.createCampaign(any(Campaign.class))).thenReturn(campaign);
+
+        mockMvc.perform(post("/api/campaign/{fundraiserId}/campaign", campaign.getFundraiserId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(campaign)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.campaignId").value("campaign123"))
+                .andExpect(jsonPath("$.judul").value("Judul"));
 
         verify(campaignService).createCampaign(any(Campaign.class));
     }
@@ -81,20 +56,18 @@ public class CampaignControllerTest {
     @Test
     void testCreateCampaign() throws Exception {
         Campaign campaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                "Donation Campaign",
+                "campaign456", "fundraiser456", "Judul Baru",
                 CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
+                LocalDateTime.now(), 50000, "Deskripsi");
 
-        mockMvc.perform(post("/campaign/{campaignId}/create-campaign", campaign.getCampaignId())
-                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                        .flashAttr("campaign", campaign))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+        when(campaignService.createCampaign(any(Campaign.class))).thenReturn(campaign);
+
+        mockMvc.perform(post("/api/campaign/{campaignId}/create-campaign", campaign.getCampaignId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(campaign)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.campaignId").value("campaign456"))
+                .andExpect(jsonPath("$.judul").value("Judul Baru"));
 
         verify(campaignService).createCampaign(any(Campaign.class));
     }
@@ -103,147 +76,87 @@ public class CampaignControllerTest {
     void testActivateCampaign() throws Exception {
         String campaignId = "campaign123";
 
-        mockMvc.perform(put("/campaign/{campaignId}/activate", campaignId))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+        mockMvc.perform(put("/api/campaign/{campaignId}/activate", campaignId))
+                .andExpect(status().isOk());
 
         verify(campaignService).activateCampaign(campaignId);
     }
 
     @Test
     void testInactivateCampaign() throws Exception {
-        String campaignId = "campaign123";
-        mockMvc.perform(put("/campaign/{campaignId}/inactivate", campaignId))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+        String campaignId = "campaign456";
+
+        mockMvc.perform(put("/api/campaign/{campaignId}/inactivate", campaignId))
+                .andExpect(status().isOk());
+
         verify(campaignService).inactivateCampaign(campaignId);
     }
 
     @Test
     void testGetCampaignByFundraiserId() throws Exception {
-        String fundraiserId = "fundraiser123";
-        Campaign campaign1 = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                fundraiserId,
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        Campaign campaign2 = new Campaign(
-                "23652556-012a-4c07-b546-54eb1396d79b",
-                fundraiserId,
-                "Donation Campaign 2",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123123,
-                "Ini deskripsi 2."
-        );
-        List<Campaign> campaigns = Arrays.asList(campaign1, campaign2);
+        String fundraiserId = "fundraiser789";
+        Campaign c1 = new Campaign("1", fundraiserId, "A", "ACTIVE", LocalDateTime.now(), 1000, "desc");
+        Campaign c2 = new Campaign("2", fundraiserId, "B", "ACTIVE", LocalDateTime.now(), 2000, "desc");
 
-        when(campaignService.getCampaignByFundraiserId(fundraiserId)).thenReturn(campaigns);
+        when(campaignService.getCampaignByFundraiserId(fundraiserId)).thenReturn(Arrays.asList(c1, c2));
 
-        mockMvc.perform(get("/campaign/get-by-fundraiser/{fundraiserId}", fundraiserId))
+        mockMvc.perform(get("/api/campaign/get-by-fundraiser/{fundraiserId}", fundraiserId))
                 .andExpect(status().isOk())
-                .andExpect(view().name("CampaignList"))
-                .andExpect(model().attributeExists("campaigns"));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].campaignId").value("1"));
     }
 
     @Test
     void testGetCampaignByCampaignId() throws Exception {
-        Campaign campaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
+        Campaign campaign = new Campaign("c123", "f123", "Judul", "ACTIVE", LocalDateTime.now(), 3000, "desc");
 
-        when(campaignService.getCampaignByCampaignId(campaign.getCampaignId())).thenReturn(campaign);
+        when(campaignService.getCampaignByCampaignId("c123")).thenReturn(campaign);
 
-        mockMvc.perform(get("/campaign/get-by-id/{campaignId}", campaign.getCampaignId()))
+        mockMvc.perform(get("/api/campaign/get-by-id/{campaignId}", "c123"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("CampaignDetail"))
-                .andExpect(model().attributeExists("campaign"));
+                .andExpect(jsonPath("$.campaignId").value("c123"));
     }
 
     @Test
     public void testUpdateCampaignJudul() throws Exception {
-        Campaign campaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        campaign.setCampaignId("123");
-        campaign.setJudul("Updated Judul");
+        Campaign campaign = new Campaign("123", "f1", "Updated", "ACTIVE", LocalDateTime.now(), 100, "desc");
 
-        mockMvc.perform(put("/campaign/update-judul")
+        mockMvc.perform(put("/api/campaign/update-judul")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaign)))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/campaign/get-by-id/123"));
+                .andExpect(status().isOk());
 
-        Mockito.verify(campaignService).updateCampaignJudul("123", "Updated Judul");
+        Mockito.verify(campaignService).updateCampaignJudul("123", "Updated");
     }
 
     @Test
     public void testUpdateCampaignTarget() throws Exception {
-        Campaign campaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        campaign.setCampaignId("123");
-        campaign.setTarget(50000);
+        Campaign campaign = new Campaign("123", "f1", "Judul", "ACTIVE", LocalDateTime.now(), 50000, "desc");
 
-        mockMvc.perform(put("/campaign/update-target")
+        mockMvc.perform(put("/api/campaign/update-target")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaign)))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/campaign/get-by-id/123"));
+                .andExpect(status().isOk());
 
         Mockito.verify(campaignService).updateCampaignTarget("123", 50000);
     }
 
     @Test
     public void testUpdateCampaignDeskripsi() throws Exception {
-        Campaign campaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        campaign.setCampaignId("123");
-        campaign.setDeskripsi("Updated Deskripsi");
+        Campaign campaign = new Campaign("123", "f1", "Judul", "ACTIVE", LocalDateTime.now(), 123, "Updated Desc");
 
-        mockMvc.perform(put("/campaign/update-deskripsi")
+        mockMvc.perform(put("/api/campaign/update-deskripsi")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaign)))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/campaign/get-by-id/123"));
+                .andExpect(status().isOk());
 
-        Mockito.verify(campaignService).updateCampaignDeskripsi("123", "Updated Deskripsi");
+        Mockito.verify(campaignService).updateCampaignDeskripsi("123", "Updated Desc");
     }
 
     @Test
     public void testDeleteCampaign() throws Exception {
-        mockMvc.perform(post("/campaign/123/delete"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/"));
+        mockMvc.perform(delete("/api/campaign/{campaignId}/delete", "123"))
+                .andExpect(status().isOk());
 
         Mockito.verify(campaignService).deleteCampaign("123");
     }
