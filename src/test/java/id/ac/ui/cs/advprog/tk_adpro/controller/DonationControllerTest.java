@@ -1,189 +1,319 @@
 package id.ac.ui.cs.advprog.tk_adpro.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-
 import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
+import id.ac.ui.cs.advprog.tk_adpro.exception.InsufficientBalanceException;
 import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
 import id.ac.ui.cs.advprog.tk_adpro.service.DonationService;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
-@WebMvcTest(DonationController.class)
 class DonationControllerTest {
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockitoBean
+    @Mock
     private DonationService donationService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private DonationController donationController;
 
-    @Test
-    void testCreateDonatePage() throws Exception {
-        String campaignId = "campaign123";
+    private Donation testDonation;
+    private final String DONATION_ID = "donation123";
+    private final String CAMPAIGN_ID = "campaign456";
+    private final long DONATUR_ID = 789L;
 
-        mockMvc.perform(get("/donation/{campaignId}/donate", campaignId))
-            .andExpect(status().isOk())
-            .andExpect(view().name("DonationForm"))
-            .andExpect(model().attributeExists("donation"));
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        testDonation = Donation.builder()
+            .donationId(DONATION_ID)
+            .campaignId(CAMPAIGN_ID)
+            .donaturId(DONATUR_ID)
+            .amount(1000)
+            .status(DonationStatus.PENDING.getValue())
+            .datetime(LocalDateTime.now())
+            .message("Test donation")
+            .build();
     }
 
     @Test
-    void testVerifyDonation() throws Exception {
-        Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
-            169500,
-            DonationStatus.COMPLETED.getValue(),
-            LocalDateTime.now()
-        );
-        
-        mockMvc.perform(post("/donation/{campaignId}/donate", donation.getCampaignId())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .flashAttr("donation", donation))
-            .andExpect(status().isOk())
-            .andExpect(view().name("VerifyDonation"));
+    void testCreateDonationSuccess() {
+        when(donationService.checkBalance(any(Donation.class))).thenReturn(testDonation);
+        when(donationService.createDonation(any(Donation.class))).thenReturn(testDonation);
 
+        ResponseEntity<Object> response = donationController.createDonation(CAMPAIGN_ID, testDonation);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(testDonation, response.getBody());
+        verify(donationService).checkBalance(any(Donation.class));
         verify(donationService).createDonation(any(Donation.class));
     }
 
     @Test
-    void testCreateDonation() throws Exception {
-        Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
-            169500,
-            DonationStatus.COMPLETED.getValue(),
-            LocalDateTime.now()
-        );
+    void restCreateDonationWithNullDateTimeShouldSetCurrentTime() {
+        testDonation.setDatetime(null);
+        when(donationService.checkBalance(any(Donation.class))).thenReturn(testDonation);
+        when(donationService.createDonation(any(Donation.class))).thenReturn(testDonation);
 
-        mockMvc.perform(post("/donation/{donationId}/create-donation", donation.getDonationId())
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .flashAttr("donation", donation))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/donation/get-by-id/" + donation.getDonationId()));
-
+        ResponseEntity<Object> response = donationController.createDonation(CAMPAIGN_ID, testDonation);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(((Donation) response.getBody()).getDatetime());
+        verify(donationService).checkBalance(any(Donation.class));
         verify(donationService).createDonation(any(Donation.class));
     }
 
     @Test
-    void testCompleteDonation() throws Exception {
-        String donationId = "donation123";
+    void testCreateDonationWithInsufficientBalance() {
+        when(donationService.checkBalance(any(Donation.class))).thenThrow(new InsufficientBalanceException("Not enough balance!"));
 
-        mockMvc.perform(put("/donation/{donationId}/complete", donationId))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
+        ResponseEntity<Object> response = donationController.createDonation(CAMPAIGN_ID, testDonation);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
 
-        verify(donationService).completeDonation(donationId);
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Not enough balance!", errorResponse.get("error"));
+        verify(donationService).checkBalance(any(Donation.class));
+        verify(donationService, never()).createDonation(any(Donation.class));
     }
 
     @Test
-    void testCancelDonation() throws Exception {
-        String donationId = "donation123";
-        mockMvc.perform(put("/donation/{donationId}/cancel", donationId))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
-        verify(donationService).cancelDonation(donationId);
+    void testCreateDonationGenericException() {
+        when(donationService.checkBalance(any(Donation.class))).thenThrow(new RuntimeException("Generic error"));
+
+        ResponseEntity<Object> response = donationController.createDonation(CAMPAIGN_ID, testDonation);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
+
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Failed to create donation: Generic error", errorResponse.get("error"));
     }
 
     @Test
-    void testGetDonationByDonationId() throws Exception {
-        Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
-            169500,
-            DonationStatus.COMPLETED.getValue(),
-            LocalDateTime.now()
-        );
+    void testUpdateDonationStatusCompletedSuccess() {
+        Map<String, String> statusUpdate = new HashMap<>();
+        statusUpdate.put("status", DonationStatus.COMPLETED.getValue());
+        when(donationService.completeDonation(DONATION_ID)).thenReturn(testDonation);
 
-        when(donationService.getDonationByDonationId(donation.getDonationId())).thenReturn(donation);
-
-        mockMvc.perform(get("/donation/get-by-id/{donationId}", donation.getDonationId()))
-            .andExpect(status().isOk())
-            .andExpect(view().name("DonationDetail"))
-            .andExpect(model().attributeExists("donation"));
+        ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testDonation, response.getBody());
+        verify(donationService).completeDonation(DONATION_ID);
+        verify(donationService, never()).cancelDonation(anyString());
     }
 
     @Test
-    void testGetDonationByCampaignId() throws Exception {
-        String campaignId = "campaign123";
-        Donation donation1 = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            campaignId,
-            123L,
-            169500,
-            DonationStatus.COMPLETED.getValue(),
-            LocalDateTime.now()
-        );
-        Donation donation2 = new Donation(
-            "23652556-012a-4c07-b546-54eb1396d79b",
-            campaignId,
-            1L,
-            169500,
-            DonationStatus.COMPLETED.getValue(),
-            LocalDateTime.now()
-        );
-        List<Donation> donations = Arrays.asList(donation1, donation2);
+    void testUpdateDonationStatusCancelledSuccess() {
+        Map<String, String> statusUpdate = new HashMap<>();
+        statusUpdate.put("status", DonationStatus.CANCELLED.getValue());
+        when(donationService.cancelDonation(DONATION_ID)).thenReturn(testDonation);
 
-        when(donationService.getDonationsByCampaignId(campaignId)).thenReturn(donations);
-
-        mockMvc.perform(get("/donation/get-by-campaign/{campaignId}", campaignId))
-            .andExpect(status().isOk())
-            .andExpect(view().name("DonationList"))
-            .andExpect(model().attributeExists("donations"));
+        ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testDonation, response.getBody());
+        verify(donationService, never()).completeDonation(anyString());
+        verify(donationService).cancelDonation(DONATION_ID);
     }
 
     @Test
-    void testUpdateDonationMessage() throws Exception {
-        String donationId = "donation456";
-        String message = "Thank you for your support!";
-        Donation donation = new Donation(donationId, "campaign789", 123L, 1000, DonationStatus.PENDING.getValue(), LocalDateTime.now());
-        donation.setMessage(message);
+    void updateDonationStatusInvalidStatus() {
+        Map<String, String> statusUpdate = new HashMap<>();
+        statusUpdate.put("status", "INVALID_STATUS");
 
-        mockMvc.perform(put("/donation/update-message")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(donation)))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
+        ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
 
-        verify(donationService).updateDonationMessage(donationId, message);
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Invalid status value. Accepted values: COMPLETED, CANCELED", errorResponse.get("error"));
+        verify(donationService, never()).completeDonation(anyString());
+        verify(donationService, never()).cancelDonation(anyString());
     }
 
     @Test
-    void testDeleteDonationMessage() throws Exception {
-        String donationId = "donation789";
-        Donation donation = new Donation(donationId, "campaign123", 456L, 2000, DonationStatus.PENDING.getValue(), LocalDateTime.now());
+    void updateDonationStatusInsufficientBalance() {
+        Map<String, String> statusUpdate = new HashMap<>();
+        statusUpdate.put("status", DonationStatus.COMPLETED.getValue());
+        when(donationService.completeDonation(DONATION_ID)).thenThrow(new InsufficientBalanceException("Not enough balance!"));
 
-        mockMvc.perform(put("/donation/delete-message")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(donation)))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/donation/get-by-id/" + donationId));
+        ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
 
-        verify(donationService).deleteDonationMessage(donationId);
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Not enough balance!", errorResponse.get("error"));
+    }
+
+    @Test
+    void testUpdateDonationStatusGenericException() {
+        Map<String, String> statusUpdate = new HashMap<>();
+        statusUpdate.put("status", DonationStatus.COMPLETED.getValue());
+        when(donationService.completeDonation(DONATION_ID)).thenThrow(new RuntimeException("Generic error"));
+
+        ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
+
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Failed to update donation status: Generic error", errorResponse.get("error"));
+    }
+
+    @Test
+    void testGetDonationSuccess() {
+        when(donationService.getDonationByDonationId(DONATION_ID)).thenReturn(testDonation);
+
+        ResponseEntity<Object> response = donationController.getDonation(DONATION_ID);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testDonation, response.getBody());
+        verify(donationService).getDonationByDonationId(DONATION_ID);
+    }
+
+    @Test
+    void testGetDonationNotFound() {
+        when(donationService.getDonationByDonationId(DONATION_ID)).thenReturn(null);
+
+        ResponseEntity<Object> response = donationController.getDonation(DONATION_ID);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(donationService).getDonationByDonationId(DONATION_ID);
+    }
+
+    @Test
+    void testGetDonationException() {
+        when(donationService.getDonationByDonationId(DONATION_ID)).thenThrow(new RuntimeException("Generic error"));
+
+        ResponseEntity<Object> response = donationController.getDonation(DONATION_ID);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
+
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Failed to retrieve donation: Generic error", errorResponse.get("error"));
+    }
+
+    @Test
+    void testGetDonationsByDonaturSuccess() {
+        List<Donation> donations = Collections.singletonList(testDonation);
+        when(donationService.getDonationsByDonaturId(DONATUR_ID)).thenReturn(donations);
+
+        ResponseEntity<Object> response = donationController.getDonationsByDonatur(DONATUR_ID);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(donations, response.getBody());
+        verify(donationService).getDonationsByDonaturId(DONATUR_ID);
+    }
+
+    @Test
+    void testGetDonationsByDonaturException() {
+        when(donationService.getDonationsByDonaturId(DONATUR_ID)).thenThrow(new RuntimeException("Generic error"));
+
+        ResponseEntity<Object> response = donationController.getDonationsByDonatur(DONATUR_ID);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Failed to retrieve donations: Generic error", errorResponse.get("error"));
+    }
+
+    @Test
+    void testGetDonationsByCampaignSuccess() {
+        List<Donation> donations = Collections.singletonList(testDonation);
+        when(donationService.getDonationsByCampaignId(CAMPAIGN_ID)).thenReturn(donations);
+
+        ResponseEntity<Object> response = donationController.getDonationsByCampaign(CAMPAIGN_ID);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(donations, response.getBody());
+        verify(donationService).getDonationsByCampaignId(CAMPAIGN_ID);
+    }
+
+    @Test
+    void testGetDonationsByCampaignException() {
+        when(donationService.getDonationsByCampaignId(CAMPAIGN_ID)).thenThrow(new RuntimeException("Generic error"));
+
+        ResponseEntity<Object> response = donationController.getDonationsByCampaign(CAMPAIGN_ID);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
+
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Failed to retrieve donations: Generic error", errorResponse.get("error"));
+    }
+
+    @Test
+    void testUpdateDonationMessageSuccess() {
+        String newMessage = "Updated message";
+        Map<String, String> payload = new HashMap<>();
+        payload.put("message", newMessage);
+        when(donationService.updateDonationMessage(DONATION_ID, newMessage)).thenReturn(testDonation);
+
+        ResponseEntity<Object> response = donationController.updateDonationMessage(DONATION_ID, payload);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testDonation, response.getBody());
+        verify(donationService).updateDonationMessage(DONATION_ID, newMessage);
+    }
+
+    @Test
+    void testUpdateDonationMessageNotFound() {
+        String newMessage = "Updated message";
+        Map<String, String> payload = new HashMap<>();
+        payload.put("message", newMessage);
+        when(donationService.updateDonationMessage(DONATION_ID, newMessage)).thenReturn(null);
+
+        ResponseEntity<Object> response = donationController.updateDonationMessage(DONATION_ID, payload);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(donationService).updateDonationMessage(DONATION_ID, newMessage);
+    }
+
+    @Test
+    void testUpdateDonationMessageException() {
+        String newMessage = "Updated message";
+        Map<String, String> payload = new HashMap<>();
+        payload.put("message", newMessage);
+        when(donationService.updateDonationMessage(DONATION_ID, newMessage)).thenThrow(new RuntimeException("Generic error"));
+
+        ResponseEntity<Object> response = donationController.updateDonationMessage(DONATION_ID, payload);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
+
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Failed to update message: Generic error", errorResponse.get("error"));
+    }
+
+    @Test
+    void testDeleteDonationMessageSuccess() {
+        when(donationService.deleteDonationMessage(DONATION_ID)).thenReturn(testDonation);
+
+        ResponseEntity<Object> response = donationController.deleteDonationMessage(DONATION_ID);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testDonation, response.getBody());
+        verify(donationService).deleteDonationMessage(DONATION_ID);
+    }
+
+    @Test
+    void testDeleteDonationMessageNotFound() {
+        when(donationService.deleteDonationMessage(DONATION_ID)).thenReturn(null);
+
+        ResponseEntity<Object> response = donationController.deleteDonationMessage(DONATION_ID);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(donationService).deleteDonationMessage(DONATION_ID);
+    }
+
+    @Test
+    void testDeleteDonationMessageException() {
+        when(donationService.deleteDonationMessage(DONATION_ID)).thenThrow(new RuntimeException("Generic error"));
+
+        ResponseEntity<Object> response = donationController.deleteDonationMessage(DONATION_ID);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertInstanceOf(Map.class, response.getBody());
+
+        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertEquals("Failed to delete message: Generic error", errorResponse.get("error"));
     }
 }
