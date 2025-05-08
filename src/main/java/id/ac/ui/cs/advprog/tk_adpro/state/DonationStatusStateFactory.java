@@ -10,8 +10,8 @@ public class DonationStatusStateFactory {
         String status = donation.getStatus();
         if (DonationStatus.PENDING.getValue().equals(status)) {
             return new PendingDonationStatusState();
-        } else if (DonationStatus.CANCELLED.getValue().equals(status)) {
-            return new CancelledDonationStatusState();
+        } else if (DonationStatus.CANCELED.getValue().equals(status)) {
+            return new CanceledDonationStatusState();
         } else if (DonationStatus.COMPLETED.getValue().equals(status)) {
             return new CompletedDonationStatusState();
         }

@@ -8,21 +8,21 @@ class DonationStatusTest {
     void testEnumValues() {
         assertEquals(3, DonationStatus.values().length);
         assertNotNull(DonationStatus.valueOf("PENDING"));
-        assertNotNull(DonationStatus.valueOf("CANCELLED"));
+        assertNotNull(DonationStatus.valueOf("CANCELED"));
         assertNotNull(DonationStatus.valueOf("COMPLETED"));
     }
 
     @Test
     void testGetValue() {
         assertEquals("PENDING", DonationStatus.PENDING.getValue());
-        assertEquals("CANCELLED", DonationStatus.CANCELLED.getValue());
+        assertEquals("CANCELED", DonationStatus.CANCELED.getValue());
         assertEquals("COMPLETED", DonationStatus.COMPLETED.getValue());
     }
 
     @Test
     void testContainsMethod_WithValidValues() {
         assertTrue(DonationStatus.contains("PENDING"));
-        assertTrue(DonationStatus.contains("CANCELLED"));
+        assertTrue(DonationStatus.contains("CANCELED"));
         assertTrue(DonationStatus.contains("COMPLETED"));
     }
 

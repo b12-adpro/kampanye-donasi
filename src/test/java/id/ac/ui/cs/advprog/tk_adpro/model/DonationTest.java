@@ -245,8 +245,8 @@ class DonationTest {
     }
 
     @Test
-    void testCreateDonationCancelledStatus() {
-        String status = DonationStatus.CANCELLED.getValue();
+    void testCreateDonationCanceledStatus() {
+        String status = DonationStatus.CANCELED.getValue();
         LocalDateTime now = LocalDateTime.now();
         Donation donation = new Donation(
             "13652556-012a-4c07-b546-54eb1396d79b",

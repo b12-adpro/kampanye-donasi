@@ -112,9 +112,9 @@ class DonationControllerTest {
     }
 
     @Test
-    void testUpdateDonationStatusCancelledSuccess() {
+    void testUpdateDonationStatusCanceledSuccess() {
         Map<String, String> statusUpdate = new HashMap<>();
-        statusUpdate.put("status", DonationStatus.CANCELLED.getValue());
+        statusUpdate.put("status", DonationStatus.CANCELED.getValue());
         when(donationService.cancelDonation(DONATION_ID)).thenReturn(testDonation);
 
         ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);

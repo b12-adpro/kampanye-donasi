@@ -49,7 +49,7 @@ public class DonationController {
             Donation updatedDonation;
             if (DonationStatus.COMPLETED.getValue().equals(status)) {
                 updatedDonation = donationService.completeDonation(donationId);
-            } else if (DonationStatus.CANCELLED.getValue().equals(status)) {
+            } else if (DonationStatus.CANCELED.getValue().equals(status)) {
                 updatedDonation = donationService.cancelDonation(donationId);
             } else {
                 Map<String, String> errorResponse = new HashMap<>();

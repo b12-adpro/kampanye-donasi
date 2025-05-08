@@ -26,10 +26,10 @@ class DonationStatusStateTest {
     }
 
     @Test
-    void pendingDonation_canBeCancelled() {
+    void pendingDonation_canBeCanceled() {
         DonationStatusState state = new PendingDonationStatusState();
         state.cancel(baseDonation);
-        assertThat(baseDonation.getStatus()).isEqualTo(DonationStatus.CANCELLED.getValue());
+        assertThat(baseDonation.getStatus()).isEqualTo(DonationStatus.CANCELED.getValue());
     }
 
     @Test
@@ -40,9 +40,9 @@ class DonationStatusStateTest {
     }
 
     @Test
-    void cancelledDonation_cannotBeCancelledAgain() {
-        baseDonation.setStatus(DonationStatus.CANCELLED.getValue());
-        DonationStatusState state = new CancelledDonationStatusState();
+    void canceledDonation_cannotBeCanceledAgain() {
+        baseDonation.setStatus(DonationStatus.CANCELED.getValue());
+        DonationStatusState state = new CanceledDonationStatusState();
 
         assertThatThrownBy(() -> state.cancel(baseDonation))
             .isInstanceOf(IllegalStateException.class)
@@ -50,9 +50,9 @@ class DonationStatusStateTest {
     }
 
     @Test
-    void cancelledDonation_cannotBeCompleted() {
-        baseDonation.setStatus(DonationStatus.CANCELLED.getValue());
-        DonationStatusState state = new CancelledDonationStatusState();
+    void canceledDonation_cannotBeCompleted() {
+        baseDonation.setStatus(DonationStatus.CANCELED.getValue());
+        DonationStatusState state = new CanceledDonationStatusState();
 
         assertThatThrownBy(() -> state.complete(baseDonation))
             .isInstanceOf(IllegalStateException.class)
@@ -60,13 +60,13 @@ class DonationStatusStateTest {
     }
 
     @Test
-    void completedDonation_cannotBeCancelled() {
+    void completedDonation_cannotBeCanceled() {
         baseDonation.setStatus(DonationStatus.COMPLETED.getValue());
         DonationStatusState state = new CompletedDonationStatusState();
 
         assertThatThrownBy(() -> state.cancel(baseDonation))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("cannot be cancelled");
+            .hasMessageContaining("cannot be canceled");
     }
 
     @Test
@@ -86,10 +86,10 @@ class DonationStatusStateTest {
     }
 
     @Test
-    void factory_shouldReturnCorrectStateForCancelled() {
-        baseDonation.setStatus(DonationStatus.CANCELLED.getValue());
+    void factory_shouldReturnCorrectStateForCanceled() {
+        baseDonation.setStatus(DonationStatus.CANCELED.getValue());
         DonationStatusState state = DonationStatusStateFactory.getState(baseDonation);
-        assertThat(state).isInstanceOf(CancelledDonationStatusState.class);
+        assertThat(state).isInstanceOf(CanceledDonationStatusState.class);
     }
 
     @Test

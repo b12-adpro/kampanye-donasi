@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum DonationStatus {
     PENDING("PENDING"),
-    CANCELLED("CANCELLED"),
+    CANCELED("CANCELED"),
     COMPLETED("COMPLETED");
 
     private final String value;

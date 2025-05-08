@@ -6,7 +6,7 @@ import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
 public class PendingDonationStatusState implements DonationStatusState {
     @Override
     public void cancel(Donation donation) {
-        donation.setStatus(DonationStatus.CANCELLED.getValue());
+        donation.setStatus(DonationStatus.CANCELED.getValue());
     }
 
     @Override
