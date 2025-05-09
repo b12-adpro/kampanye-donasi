@@ -16,6 +16,7 @@ import id.ac.ui.cs.advprog.tk_adpro.strategy.WithdrawStrategy;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,9 +40,11 @@ public class CampaignServiceImplTest {
     @BeforeEach
     void setUp() {
         LocalDateTime now = LocalDateTime.now();
-        campaign = new Campaign( // <-- ini assign ke field yang udah dideklarasikan di atas
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+        UUID uuidCampaign = UUID.randomUUID();
+        UUID uuidFundraiser = UUID.randomUUID();
+        campaign = new Campaign(
+                uuidCampaign,
+                uuidFundraiser,
                 "Donation Campaign",
                 CampaignStatus.ACTIVE.getValue(),
                 now,
@@ -62,130 +65,98 @@ public class CampaignServiceImplTest {
     @Test
     void testActivateCampaign() {
         campaign.setStatus(CampaignStatus.INACTIVE.getValue());
-        when(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b")).thenReturn(campaign);
-        campaignService.activateCampaign("13652556-012a-4c07-b546-54eb1396d79b");
+        when(campaignRepository.findByCampaignId(campaign.getCampaignId())).thenReturn(campaign);
+        campaignService.activateCampaign(campaign.getCampaignId());
         verify(campaignRepository).save(argThat(c -> c.getStatus().equals(CampaignStatus.ACTIVE.getValue())));
     }
 
     @Test
     void testInactivateCampaign() {
         campaign.setStatus(CampaignStatus.ACTIVE.getValue());
-        when(campaignRepository.findByCampaignId("13652556-012a-4c07-b546-54eb1396d79b")).thenReturn(campaign);
-        campaignService.inactivateCampaign("13652556-012a-4c07-b546-54eb1396d79b");
+        when(campaignRepository.findByCampaignId(campaign.getCampaignId())).thenReturn(campaign);
+        campaignService.inactivateCampaign(campaign.getCampaignId());
         verify(campaignRepository).save(argThat(c -> c.getStatus().equals(CampaignStatus.INACTIVE.getValue())));
     }
 
     @Test
     void testGetCampaignByCampaignId() {
+        UUID uuidDummyCampaign = UUID.randomUUID();
+        UUID uuidDummyFundraiser = UUID.randomUUID();
         Campaign dummyCampaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+                uuidDummyCampaign,
+                uuidDummyFundraiser,
                 "Donation Campaign",
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
                 123123,
                 "Ini deskripsi."
         );
-        dummyCampaign.setCampaignId("123");
+        UUID uuidNewDummyCampaign = UUID.randomUUID();
+        dummyCampaign.setCampaignId(uuidNewDummyCampaign);
 
-        when(campaignRepository.findByCampaignId("123")).thenReturn(dummyCampaign);
+        when(campaignRepository.findByCampaignId(uuidNewDummyCampaign)).thenReturn(dummyCampaign);
 
-        Campaign result = campaignService.getCampaignByCampaignId("123");
+        Campaign result = campaignService.getCampaignByCampaignId(uuidNewDummyCampaign);
 
-        assertEquals("123", result.getCampaignId());
+        assertEquals(uuidNewDummyCampaign, result.getCampaignId());
     }
 
 
     @Test
     void testGetCampaignByFundraiserId() {
+        UUID uuidDummyCampaign = UUID.randomUUID();
+        UUID uuidDummyFundraiser = UUID.randomUUID();
         Campaign dummyCampaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+                uuidDummyCampaign,
+                uuidDummyFundraiser,
                 "Donation Campaign",
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
                 123123,
                 "Ini deskripsi."
         );
-        dummyCampaign.setFundraiserId("abc");
+        UUID uuidNewDummyFundraiser = UUID.randomUUID();
+        dummyCampaign.setFundraiserId(uuidNewDummyFundraiser);
         List<Campaign> dummyList = List.of(dummyCampaign);
 
-        when(campaignRepository.findByFundraiserId("abc")).thenReturn(dummyList);
+        when(campaignRepository.findByFundraiserId(uuidNewDummyFundraiser)).thenReturn(dummyList);
 
-        List<Campaign> result = campaignService.getCampaignByFundraiserId("abc");
+        List<Campaign> result = campaignService.getCampaignByFundraiserId(uuidNewDummyFundraiser);
 
         assertEquals(1, result.size());
-        assertEquals("abc", result.get(0).getFundraiserId());
+        assertEquals(uuidNewDummyFundraiser, result.get(0).getFundraiserId());
     }
 
-
     @Test
-    void testUpdateCampaignJudul() {
+    void testUpdateCampaign() {
+        UUID uuidDummyCampaign = UUID.randomUUID();
+        UUID uuidDummyFundraiser = UUID.randomUUID();
         Campaign dummyCampaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
+                uuidDummyCampaign,
+                uuidDummyFundraiser,
                 "Donation Campaign",
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
                 123123,
                 "Ini deskripsi."
         );
-        dummyCampaign.setCampaignId("1");
-        dummyCampaign.setJudul("Old Title");
-
-        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
-
-        campaignService.updateCampaignJudul("1", "New Title");
-
-        assertEquals("New Title", dummyCampaign.getJudul());
-    }
-
-    @Test
-    void testUpdateCampaignTarget() {
-        Campaign dummyCampaign = new Campaign(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            "Donation Campaign",
-            CampaignStatus.ACTIVE.getValue(),
-            LocalDateTime.now(),
-            123123,
-            "Ini deskripsi."
-        );
-        dummyCampaign.setCampaignId("1");
+        UUID uuidNewDummyCampaign = UUID.randomUUID();
+        dummyCampaign.setCampaignId(uuidNewDummyCampaign);
+        dummyCampaign.setJudul("New Title");
         dummyCampaign.setTarget(100);
+        dummyCampaign.setDeskripsi("New Deskripsi");
 
-        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
+        when(campaignRepository.save(dummyCampaign)).thenReturn(dummyCampaign);
 
-        campaignService.updateCampaignTarget("1", 500);
-
-        assertEquals(500, dummyCampaign.getTarget());
+        Campaign updatedCampaign = campaignService.updateCampaign(dummyCampaign);
+        assertEquals("New Title", updatedCampaign.getJudul());
+        assertEquals(100, updatedCampaign.getTarget());
+        assertEquals("New Deskripsi", updatedCampaign.getDeskripsi());
     }
-
-    @Test
-    void testUpdateCampaignDeskripsi() {
-        Campaign dummyCampaign = new Campaign(
-                "13652556-012a-4c07-b546-54eb1396d79b",
-                "eb558e9f-1c39-460e-8860-71af6af63bd6",
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        dummyCampaign.setCampaignId("1");
-        dummyCampaign.setDeskripsi("Old");
-
-        when(campaignRepository.findByCampaignId("1")).thenReturn(dummyCampaign);
-
-        campaignService.updateCampaignDeskripsi("1", "New");
-
-        assertEquals("New", dummyCampaign.getDeskripsi());
-    }
-
 
     @Test
     void testDeleteCampaign() {
-        campaignService.deleteCampaign("13652556-012a-4c07-b546-54eb1396d79b");
-        verify(campaignRepository).deleteByCampaignId("13652556-012a-4c07-b546-54eb1396d79b");
+        campaignService.deleteCampaign(campaign.getCampaignId());
+        verify(campaignRepository).deleteByCampaignId(campaign.getCampaignId());
     }
 }

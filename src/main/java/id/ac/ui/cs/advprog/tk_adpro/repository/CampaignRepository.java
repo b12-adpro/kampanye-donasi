@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public class CampaignRepository {
@@ -24,18 +25,18 @@ public class CampaignRepository {
         return campaign;
     }
 
-    public Campaign findByCampaignId(String id) {
+    public Campaign findByCampaignId(UUID id) {
         for (Campaign c: campaignData) if (c.getCampaignId().equals(id)) return c;
         return null;
     }
 
-    public List<Campaign> findByFundraiserId(String fundraiserId) {
+    public List<Campaign> findByFundraiserId(UUID fundraiserId) {
         List<Campaign> campaigns = new ArrayList<>();
         for (Campaign c: campaignData) if (c.getFundraiserId().equals(fundraiserId)) campaigns.add(c);
         return campaigns;
     }
 
-    public void deleteByCampaignId(String id) {
+    public void deleteByCampaignId(UUID id) {
         int i = 0;
         for (Campaign c : campaignData) {
             if (c.getCampaignId().equals(id)) {

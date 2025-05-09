@@ -9,6 +9,7 @@ import id.ac.ui.cs.advprog.tk_adpro.state.CampaignStatusState;
 import id.ac.ui.cs.advprog.tk_adpro.state.CampaignStatusStateFactory;
 import id.ac.ui.cs.advprog.tk_adpro.strategy.WithdrawStrategy;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class CampaignServiceImpl implements CampaignService {
@@ -22,21 +23,21 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public void activateCampaign(String campaignId) {
+    public void activateCampaign(UUID campaignId) {
         Campaign campaign = getCampaignByCampaignId(campaignId);
         campaign.setStatus(CampaignStatus.ACTIVE.getValue());
         campaignRepository.save(campaign);
     }
 
     @Override
-    public void inactivateCampaign(String campaignId) {
+    public void inactivateCampaign(UUID campaignId) {
         Campaign campaign = getCampaignByCampaignId(campaignId);
         campaign.setStatus(CampaignStatus.INACTIVE.getValue());
         campaignRepository.save(campaign);
     }
 
     @Override
-    public Campaign getCampaignByCampaignId(String campaignId) {
+    public Campaign getCampaignByCampaignId(UUID campaignId) {
         Campaign campaign = campaignRepository.findByCampaignId(campaignId);
         if (campaign == null) {
             throw new RuntimeException("Campaign not found");
@@ -45,33 +46,17 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public List<Campaign> getCampaignByFundraiserId(String fundraiserId) {
+    public List<Campaign> getCampaignByFundraiserId(UUID fundraiserId) {
         return campaignRepository.findByFundraiserId(fundraiserId);
     }
 
     @Override
-    public Campaign updateCampaignJudul(String campaignId, String newJudul) {
-        Campaign campaign = getCampaignByCampaignId(campaignId);
-        campaign.setJudul(newJudul);
+    public Campaign updateCampaign(Campaign campaign) {
         return campaignRepository.save(campaign);
     }
 
     @Override
-    public Campaign updateCampaignTarget(String campaignId, int newTarget) {
-        Campaign campaign = getCampaignByCampaignId(campaignId);
-        campaign.setTarget(newTarget);
-        return campaignRepository.save(campaign);
-    }
-
-    @Override
-    public Campaign updateCampaignDeskripsi(String campaignId, String newDeskripsi) {
-        Campaign campaign = getCampaignByCampaignId(campaignId);
-        campaign.setDeskripsi(newDeskripsi);
-        return campaignRepository.save(campaign);
-    }
-
-    @Override
-    public void deleteCampaign(String campaignId) {
+    public void deleteCampaign(UUID campaignId) {
         campaignRepository.deleteByCampaignId(campaignId);
     }
 }
