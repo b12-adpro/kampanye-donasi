@@ -18,7 +18,6 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class DonationControllerTest {
@@ -29,9 +28,9 @@ class DonationControllerTest {
     private DonationController donationController;
 
     private Donation testDonation;
-    private final String DONATION_ID = "donation123";
-    private final String CAMPAIGN_ID = "campaign456";
-    private final long DONATUR_ID = 789L;
+    private static final UUID DONATION_ID = UUID.randomUUID();
+    private static final UUID CAMPAIGN_ID = UUID.randomUUID();
+    private static final UUID DONATUR_ID = UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
@@ -78,9 +77,9 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.createDonation(CAMPAIGN_ID, testDonation);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Not enough balance!", errorResponse.get("error"));
         verify(donationService).checkBalance(any(Donation.class));
         verify(donationService, never()).createDonation(any(Donation.class));
@@ -92,9 +91,9 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.createDonation(CAMPAIGN_ID, testDonation);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Failed to create donation: Generic error", errorResponse.get("error"));
     }
 
@@ -108,7 +107,7 @@ class DonationControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(testDonation, response.getBody());
         verify(donationService).completeDonation(DONATION_ID);
-        verify(donationService, never()).cancelDonation(anyString());
+        verify(donationService, never()).cancelDonation(any(UUID.class));
     }
 
     @Test
@@ -120,7 +119,7 @@ class DonationControllerTest {
         ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(testDonation, response.getBody());
-        verify(donationService, never()).completeDonation(anyString());
+        verify(donationService, never()).completeDonation(any(UUID.class));
         verify(donationService).cancelDonation(DONATION_ID);
     }
 
@@ -131,12 +130,12 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Invalid status value. Accepted values: COMPLETED, CANCELED", errorResponse.get("error"));
-        verify(donationService, never()).completeDonation(anyString());
-        verify(donationService, never()).cancelDonation(anyString());
+        verify(donationService, never()).completeDonation(any(UUID.class));
+        verify(donationService, never()).cancelDonation(any(UUID.class));
     }
 
     @Test
@@ -147,9 +146,9 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Not enough balance!", errorResponse.get("error"));
     }
 
@@ -161,9 +160,9 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.updateDonationStatus(DONATION_ID, statusUpdate);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Failed to update donation status: Generic error", errorResponse.get("error"));
     }
 
@@ -193,9 +192,9 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.getDonation(DONATION_ID);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Failed to retrieve donation: Generic error", errorResponse.get("error"));
     }
 
@@ -216,8 +215,8 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.getDonationsByDonatur(DONATUR_ID);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        assertTrue(response.getBody() instanceof Map);
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Failed to retrieve donations: Generic error", errorResponse.get("error"));
     }
 
@@ -238,9 +237,9 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.getDonationsByCampaign(CAMPAIGN_ID);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Failed to retrieve donations: Generic error", errorResponse.get("error"));
     }
 
@@ -275,13 +274,14 @@ class DonationControllerTest {
         String newMessage = "Updated message";
         Map<String, String> payload = new HashMap<>();
         payload.put("message", newMessage);
-        when(donationService.updateDonationMessage(DONATION_ID, newMessage)).thenThrow(new RuntimeException("Generic error"));
+        when(donationService.updateDonationMessage(DONATION_ID, newMessage))
+            .thenThrow(new RuntimeException("Generic error"));
 
         ResponseEntity<Object> response = donationController.updateDonationMessage(DONATION_ID, payload);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Failed to update message: Generic error", errorResponse.get("error"));
     }
 
@@ -311,9 +311,9 @@ class DonationControllerTest {
 
         ResponseEntity<Object> response = donationController.deleteDonationMessage(DONATION_ID);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertInstanceOf(Map.class, response.getBody());
+        assertTrue(response.getBody() instanceof Map);
 
-        Map<String, String> errorResponse = (Map<String, String>) response.getBody();
+        Map<?, ?> errorResponse = (Map<?, ?>) response.getBody();
         assertEquals("Failed to delete message: Generic error", errorResponse.get("error"));
     }
 }

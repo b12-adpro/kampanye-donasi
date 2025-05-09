@@ -2,10 +2,12 @@ package id.ac.ui.cs.advprog.tk_adpro.state;
 
 import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
 import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -15,9 +17,9 @@ class DonationStatusStateTest {
     @BeforeEach
     void setUp() {
         baseDonation = new Donation(
-            "don1",
-            "camp1",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             1000,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
