@@ -50,23 +50,7 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public Campaign updateCampaignJudul(String campaignId, String newJudul) {
-        Campaign campaign = getCampaignByCampaignId(campaignId);
-        campaign.setJudul(newJudul);
-        return campaignRepository.save(campaign);
-    }
-
-    @Override
-    public Campaign updateCampaignTarget(String campaignId, int newTarget) {
-        Campaign campaign = getCampaignByCampaignId(campaignId);
-        campaign.setTarget(newTarget);
-        return campaignRepository.save(campaign);
-    }
-
-    @Override
-    public Campaign updateCampaignDeskripsi(String campaignId, String newDeskripsi) {
-        Campaign campaign = getCampaignByCampaignId(campaignId);
-        campaign.setDeskripsi(newDeskripsi);
+    public Campaign updateCampaign(Campaign campaign) {
         return campaignRepository.save(campaign);
     }
 
