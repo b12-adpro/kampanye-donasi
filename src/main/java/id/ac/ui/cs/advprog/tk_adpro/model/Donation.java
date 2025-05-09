@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.tk_adpro.model;
 import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -11,15 +12,15 @@ import lombok.Setter;
 @Builder
 @Getter @Setter
 public class Donation {
-    private String donationId;
-    private String campaignId;
-    private long donaturId;
+    private UUID donationId;
+    private UUID campaignId;
+    private UUID donaturId;
     private int amount;
     private String status;
     private LocalDateTime datetime;
     private String message;
 
-    public Donation(String donationId, String campaignId, long donaturId, int amount, String status, LocalDateTime datetime, String message) {
+    public Donation(UUID donationId, UUID campaignId, UUID donaturId, int amount, String status, LocalDateTime datetime, String message) {
         validateCommonFields(campaignId, donaturId, amount, status);
         this.donationId = donationId;
         this.campaignId = campaignId;
@@ -30,21 +31,21 @@ public class Donation {
         this.datetime = datetime;
     }
 
-    public Donation(String donationId, String campaignId, long donaturId, int amount, String status, LocalDateTime datetime) {
+    public Donation(UUID donationId, UUID campaignId, UUID donaturId, int amount, String status, LocalDateTime datetime) {
         this(donationId, campaignId, donaturId, amount, status, datetime, null);
     }
 
     public Donation() {}
 
-    private void validateCommonFields(String campaignId, long donaturId, int amount, String status) {
-        if (campaignId == null || campaignId.isEmpty()) {
-            throw new IllegalArgumentException("Campaign Id must not be null or empty!");
+    private void validateCommonFields(UUID campaignId, UUID donaturId, int amount, String status) {
+        if (campaignId == null) {
+            throw new IllegalArgumentException("Campaign Id must not be null!");
         }
-        if (donaturId < 0) {
-            throw new IllegalArgumentException("DonaturId is not valid!");
+        if (donaturId == null) {
+            throw new IllegalArgumentException("DonaturId is must not be null!");
         }
         if (amount < 0) {
-            throw new IllegalArgumentException("Amount cant be negative!");
+            throw new IllegalArgumentException("Amount can't be negative!");
         }
         if (!DonationStatus.contains(status)) {
             throw new IllegalArgumentException("Status is not valid!");

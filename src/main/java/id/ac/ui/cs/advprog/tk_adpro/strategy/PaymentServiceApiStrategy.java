@@ -16,6 +16,7 @@ import id.ac.ui.cs.advprog.tk_adpro.exception.PaymentServiceException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,7 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
     }
 
     @Override
-    public int checkBalance(long donaturId) {
+    public int checkBalance(UUID donaturId) {
         try {
             // Prepare HTTP headers and body for JSON communication
             HttpHeaders headers = new HttpHeaders();
@@ -88,7 +89,7 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
     }
 
     @Override
-    public boolean processPayment(long donaturId, int amount) {
+    public boolean processPayment(UUID donaturId, int amount) {
         try {
             // Prepare HTTP headers and body for JSON communication
             HttpHeaders headers = new HttpHeaders();

@@ -23,25 +23,25 @@ public class DonationRepository {
                 i++;
             }
         }
-        donation.setDonationId(UUID.randomUUID().toString());
+        donation.setDonationId(UUID.randomUUID());
         donationData.add(donation);
         return donation;
     }
 
-    public Donation findByDonationId(String id) {
-        for (Donation d: donationData) if (d.getDonationId().equals(id)) return d;
+    public Donation findByDonationId(UUID donationId) {
+        for (Donation d: donationData) if (d.getDonationId().equals(donationId)) return d;
         return null;
     }
 
-    public List<Donation> findByCampaignId(String campaignId) {
+    public List<Donation> findByCampaignId(UUID campaignId) {
         List<Donation> donations = new ArrayList<>();
         for (Donation d: donationData) if (d.getCampaignId().equals(campaignId)) donations.add(d);
         return donations;
     }
 
-    public List<Donation> findByDonaturId(long donaturId) {
+    public List<Donation> findByDonaturId(UUID donaturId) {
         List<Donation> donations = new ArrayList<>();
-        for (Donation d: donationData) if (d.getDonaturId() == donaturId) donations.add(d);
+        for (Donation d: donationData) if (d.getDonaturId().equals(donaturId)) donations.add(d);
         return donations;
     }
 }

@@ -17,8 +17,7 @@ import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -36,17 +35,10 @@ class DonationServiceImplTest {
 
     @Test
     void testCheckBalance_SufficientBalance() {
-        Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
-            169500,
-            DonationStatus.COMPLETED.getValue(),
-            LocalDateTime.now(),
-            "Get well soon!"
-        );
+        UUID donaturId = UUID.randomUUID();
+        Donation donation = new Donation(UUID.randomUUID(), UUID.randomUUID(), donaturId, 169500, DonationStatus.COMPLETED.getValue(), LocalDateTime.now(), "Get well soon!");
 
-        when(paymentStrategy.checkBalance(donation.getDonaturId())).thenReturn(169500);
+        when(paymentStrategy.checkBalance(donaturId)).thenReturn(169500);
 
         Donation result = donationService.checkBalance(donation);
         assertEquals(donation, result);
@@ -54,55 +46,58 @@ class DonationServiceImplTest {
 
     @Test
     void testCheckBalance_InsufficientBalance() {
+        UUID donaturId = UUID.randomUUID();
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            donaturId,
             169500,
             DonationStatus.COMPLETED.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
 
-        when(paymentStrategy.checkBalance(donation.getDonaturId())).thenReturn(169499);
+        when(paymentStrategy.checkBalance(donaturId)).thenReturn(169499);
 
         assertThrows(InsufficientBalanceException.class, () -> donationService.checkBalance(donation));
     }
 
     @Test
     void testCreateDonation_PaymentSuccess() {
+        UUID donaturId = UUID.randomUUID();
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            donaturId,
             169500,
             DonationStatus.COMPLETED.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
 
-        when(paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount())).thenReturn(true);
+        when(paymentStrategy.processPayment(donaturId, 169500)).thenReturn(true);
         when(donationRepository.save(donation)).thenReturn(donation);
 
         Donation result = donationService.createDonation(donation);
-        verify(paymentStrategy, times(1)).processPayment(donation.getDonaturId(), donation.getAmount());
-        verify(donationRepository, times(1)).save(donation);
+        verify(paymentStrategy).processPayment(donaturId, 169500);
+        verify(donationRepository).save(donation);
         assertEquals(donation, result);
     }
 
     @Test
     void testCreateDonation_PaymentFailure() {
+        UUID donaturId = UUID.randomUUID();
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            donaturId,
             169500,
             DonationStatus.COMPLETED.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
 
-        when(paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount())).thenReturn(false);
+        when(paymentStrategy.processPayment(donaturId, 169500)).thenReturn(false);
 
         assertThrows(InsufficientBalanceException.class, () -> donationService.createDonation(donation));
     }
@@ -110,9 +105,9 @@ class DonationServiceImplTest {
     @Test
     void testCreateDonation_NotCompletedStatus() {
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
@@ -122,16 +117,16 @@ class DonationServiceImplTest {
         when(donationRepository.save(donation)).thenReturn(donation);
 
         Donation result = donationService.createDonation(donation);
-        verify(donationRepository, times(1)).save(donation);
+        verify(donationRepository).save(donation);
         assertEquals(donation, result);
     }
 
     @Test
     void testCompleteDonation() {
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
@@ -146,7 +141,6 @@ class DonationServiceImplTest {
 
         try (MockedStatic<DonationStatusStateFactory> factoryMock = mockStatic(DonationStatusStateFactory.class)) {
             when(donationRepository.findByDonationId(donation.getDonationId())).thenReturn(donation);
-    
             factoryMock.when(() -> DonationStatusStateFactory.getState(donation)).thenReturn(mockState);
 
             when(paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount())).thenReturn(true);
@@ -154,9 +148,9 @@ class DonationServiceImplTest {
 
             donationService.completeDonation(donation.getDonationId());
 
-            verify(mockState, times(1)).complete(donation);
-            verify(paymentStrategy, times(1)).processPayment(donation.getDonaturId(), donation.getAmount());
-            verify(donationRepository, times(1)).save(donation);
+            verify(mockState).complete(donation);
+            verify(paymentStrategy).processPayment(donation.getDonaturId(), donation.getAmount());
+            verify(donationRepository).save(donation);
             assertEquals(DonationStatus.COMPLETED.getValue(), donation.getStatus());
         }
     }
@@ -164,9 +158,9 @@ class DonationServiceImplTest {
     @Test
     void testCancelDonation() {
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
@@ -181,15 +175,14 @@ class DonationServiceImplTest {
 
         try (MockedStatic<DonationStatusStateFactory> factoryMock = mockStatic(DonationStatusStateFactory.class)) {
             when(donationRepository.findByDonationId(donation.getDonationId())).thenReturn(donation);
-
             factoryMock.when(() -> DonationStatusStateFactory.getState(donation)).thenReturn(mockState);
 
             when(donationRepository.save(donation)).thenReturn(donation);
 
             donationService.cancelDonation(donation.getDonationId());
 
-            verify(mockState, times(1)).cancel(donation);
-            verify(donationRepository, times(1)).save(donation);
+            verify(mockState).cancel(donation);
+            verify(donationRepository).save(donation);
             assertEquals(DonationStatus.CANCELED.getValue(), donation.getStatus());
         }
     }
@@ -197,14 +190,15 @@ class DonationServiceImplTest {
     @Test
     void testGetDonationByDonationId() {
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
+
         when(donationRepository.findByDonationId(donation.getDonationId())).thenReturn(donation);
 
         Donation result = donationService.getDonationByDonationId(donation.getDonationId());
@@ -213,10 +207,10 @@ class DonationServiceImplTest {
 
     @Test
     void testGetDonationsByDonaturId() {
-        long donaturId = 123L;
+        UUID donaturId = UUID.randomUUID();
         Donation donation1 = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             donaturId,
             169500,
             DonationStatus.PENDING.getValue(),
@@ -224,14 +218,15 @@ class DonationServiceImplTest {
             "Get well soon!"
         );
         Donation donation2 = new Donation(
-            "13652556-012a-4c07-b546-54fb1396d79b",
-            "eb558e9f-1c39-460e-8860-71zf6af63bd6",
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             donaturId,
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
+
         List<Donation> donations = Arrays.asList(donation1, donation2);
         when(donationRepository.findByDonaturId(donaturId)).thenReturn(donations);
 
@@ -241,25 +236,26 @@ class DonationServiceImplTest {
 
     @Test
     void testGetDonationsByCampaignId() {
-        String campaignId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID campaignId = UUID.randomUUID();
         Donation donation1 = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
+            UUID.randomUUID(),
             campaignId,
-            123L,
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
         Donation donation2 = new Donation(
-            "13652556-012a-4c07-b546-54fb1396d79b",
+            UUID.randomUUID(),
             campaignId,
-            456L,
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
+
         List<Donation> donations = Arrays.asList(donation1, donation2);
         when(donationRepository.findByCampaignId(campaignId)).thenReturn(donations);
 
@@ -270,9 +266,9 @@ class DonationServiceImplTest {
     @Test
     void testUpdateDonationMessage() {
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
@@ -282,24 +278,25 @@ class DonationServiceImplTest {
         when(donationRepository.findByDonationId(donation.getDonationId())).thenReturn(donation);
         when(donationRepository.save(donation)).thenReturn(donation);
 
-        Donation result = donationService.updateDonationMessage(donation.getDonationId(), "Simpansini Bananini");
-        assertEquals("Simpansini Bananini", result.getMessage());
+        Donation result = donationService.updateDonationMessage(donation.getDonationId(), "New Message");
+        assertEquals("New Message", result.getMessage());
     }
 
     @Test
     void testUpdateDonationMessage_DonationNotFound() {
-        when(donationRepository.findByDonationId("13652556-012a-4c07-b546-54eb1396d79b")).thenReturn(null);
+        UUID id = UUID.randomUUID();
+        when(donationRepository.findByDonationId(id)).thenReturn(null);
 
-        Donation result = donationService.updateDonationMessage("13652556-012a-4c07-b546-54eb1396d79b", "new message");
+        Donation result = donationService.updateDonationMessage(id, "new message");
         assertNull(result);
     }
 
     @Test
     void testDeleteDonationMessage() {
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
@@ -315,9 +312,10 @@ class DonationServiceImplTest {
 
     @Test
     void testDeleteDonationMessage_DonationNotFound() {
-        when(donationRepository.findByDonationId("don1")).thenReturn(null);
+        UUID id = UUID.randomUUID();
+        when(donationRepository.findByDonationId(id)).thenReturn(null);
 
-        Donation result = donationService.deleteDonationMessage("don1");
+        Donation result = donationService.deleteDonationMessage(id);
         assertNull(result);
     }
 }

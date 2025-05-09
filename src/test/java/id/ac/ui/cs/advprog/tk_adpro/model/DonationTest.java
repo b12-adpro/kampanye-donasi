@@ -1,22 +1,26 @@
 package id.ac.ui.cs.advprog.tk_adpro.model;
 
 import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
-
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DonationTest {
+    private final UUID donationId = UUID.randomUUID();
+    private final UUID campaignId = UUID.randomUUID();
+    private final UUID donaturId = UUID.randomUUID();
+
     @Test
     void testCreateDonationWithMessage() {
         String status = DonationStatus.COMPLETED.getValue();
         LocalDateTime now = LocalDateTime.now();
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            donationId,
+            campaignId,
+            donaturId,
             169500,
             status,
             now,
@@ -24,9 +28,9 @@ class DonationTest {
         );
 
         assertNotNull(donation);
-        assertEquals("13652556-012a-4c07-b546-54eb1396d79b", donation.getDonationId());
-        assertEquals("eb558e9f-1c39-460e-8860-71af6af63bd6", donation.getCampaignId());
-        assertEquals(123L, donation.getDonaturId());
+        assertEquals(donationId, donation.getDonationId());
+        assertEquals(campaignId, donation.getCampaignId());
+        assertEquals(donaturId, donation.getDonaturId());
         assertEquals(169500, donation.getAmount());
         assertEquals(status, donation.getStatus());
         assertEquals(now, donation.getDatetime());
@@ -38,18 +42,18 @@ class DonationTest {
         String status = DonationStatus.COMPLETED.getValue();
         LocalDateTime now = LocalDateTime.now();
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            donationId,
+            campaignId,
+            donaturId,
             169500,
             status,
             now
         );
 
         assertNotNull(donation);
-        assertEquals("13652556-012a-4c07-b546-54eb1396d79b", donation.getDonationId());
-        assertEquals("eb558e9f-1c39-460e-8860-71af6af63bd6", donation.getCampaignId());
-        assertEquals(123L, donation.getDonaturId());
+        assertEquals(donationId, donation.getDonationId());
+        assertEquals(campaignId, donation.getCampaignId());
+        assertEquals(donaturId, donation.getDonaturId());
         assertEquals(169500, donation.getAmount());
         assertEquals(status, donation.getStatus());
         assertEquals(now, donation.getDatetime());
@@ -61,9 +65,9 @@ class DonationTest {
         String status = DonationStatus.COMPLETED.getValue();
         LocalDateTime now = LocalDateTime.now();
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            donationId,
+            campaignId,
+            donaturId,
             169500,
             status,
             now,
@@ -71,9 +75,9 @@ class DonationTest {
         );
 
         assertNotNull(donation);
-        assertEquals("13652556-012a-4c07-b546-54eb1396d79b", donation.getDonationId());
-        assertEquals("eb558e9f-1c39-460e-8860-71af6af63bd6", donation.getCampaignId());
-        assertEquals(123L, donation.getDonaturId());
+        assertEquals(donationId, donation.getDonationId());
+        assertEquals(campaignId, donation.getCampaignId());
+        assertEquals(donaturId, donation.getDonaturId());
         assertEquals(169500, donation.getAmount());
         assertEquals(status, donation.getStatus());
         assertEquals(now, donation.getDatetime());
@@ -81,13 +85,13 @@ class DonationTest {
     }
 
     @Test
-    void testCreateDonationWithNullDonationId() {
+    void testCreateDonationNullDonationId() {
         String status = DonationStatus.COMPLETED.getValue();
         LocalDateTime now = LocalDateTime.now();
         Donation donation = new Donation(
             null,
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            campaignId,
+            donaturId,
             169500,
             status,
             now
@@ -95,8 +99,8 @@ class DonationTest {
 
         assertNotNull(donation);
         assertNull(donation.getDonationId());
-        assertEquals("eb558e9f-1c39-460e-8860-71af6af63bd6", donation.getCampaignId());
-        assertEquals(123L, donation.getDonaturId());
+        assertEquals(campaignId, donation.getCampaignId());
+        assertEquals(donaturId, donation.getDonaturId());
         assertEquals(169500, donation.getAmount());
         assertEquals(status, donation.getStatus());
         assertEquals(now, donation.getDatetime());
@@ -108,18 +112,18 @@ class DonationTest {
         String status = DonationStatus.COMPLETED.getValue();
         LocalDateTime now = LocalDateTime.now();
         Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            donationId,
+            campaignId,
+            donaturId,
             0,
             status,
             now
         );
 
         assertNotNull(donation);
-        assertEquals("13652556-012a-4c07-b546-54eb1396d79b", donation.getDonationId());
-        assertEquals("eb558e9f-1c39-460e-8860-71af6af63bd6", donation.getCampaignId());
-        assertEquals(123L, donation.getDonaturId());
+        assertEquals(donationId, donation.getDonationId());
+        assertEquals(campaignId, donation.getCampaignId());
+        assertEquals(donaturId, donation.getDonaturId());
         assertEquals(0, donation.getAmount());
         assertEquals(status, donation.getStatus());
         assertEquals(now, donation.getDatetime());
@@ -131,9 +135,9 @@ class DonationTest {
         String status = DonationStatus.COMPLETED.getValue();
         LocalDateTime now = LocalDateTime.now();
         assertThrows(IllegalArgumentException.class, () -> new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            donationId,
+            campaignId,
+            donaturId,
             -1,
             status,
             now
@@ -145,9 +149,9 @@ class DonationTest {
         String status = DonationStatus.COMPLETED.getValue();
         LocalDateTime now = LocalDateTime.now();
         assertThrows(IllegalArgumentException.class, () -> new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
+            donationId,
             null,
-            123L,
+            donaturId,
             1,
             status,
             now
@@ -155,13 +159,13 @@ class DonationTest {
     }
 
     @Test
-    void testCreateDonationEmptyStringCampaignId() {
+    void testCreateDonationNullDonaturId() {
         String status = DonationStatus.COMPLETED.getValue();
         LocalDateTime now = LocalDateTime.now();
         assertThrows(IllegalArgumentException.class, () -> new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "",
-            123L,
+            donationId,
+            campaignId,
+            null,
             1,
             status,
             now
@@ -169,114 +173,30 @@ class DonationTest {
     }
 
     @Test
-    void testCreateDonationZeroDonaturId() {
-        String status = DonationStatus.COMPLETED.getValue();
+    void testCreateDonationWithValidStatuses() {
         LocalDateTime now = LocalDateTime.now();
-        assertThrows(IllegalArgumentException.class, () -> new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "",
-            0,
-            1,
-            status,
-            now
-        ));
-    }
-
-    @Test
-    void testCreateDonationNegativeDonaturId() {
-        String status = DonationStatus.COMPLETED.getValue();
-        LocalDateTime now = LocalDateTime.now();
-        assertThrows(IllegalArgumentException.class, () -> new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "abc",
-            -1L,
-            1,
-            status,
-            now
-        ));
-    }
-
-    @Test
-    void testCreateDonationCompletedStatus() {
-        String status = DonationStatus.COMPLETED.getValue();
-        LocalDateTime now = LocalDateTime.now();
-        Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
-            169500,
-            status,
-            now,
-            ""
-        );
-
-        assertNotNull(donation);
-        assertEquals("13652556-012a-4c07-b546-54eb1396d79b", donation.getDonationId());
-        assertEquals("eb558e9f-1c39-460e-8860-71af6af63bd6", donation.getCampaignId());
-        assertEquals(123L, donation.getDonaturId());
-        assertEquals(169500, donation.getAmount());
-        assertEquals(status, donation.getStatus());
-        assertEquals(now, donation.getDatetime());
-        assertEquals("", donation.getMessage());
-    }
-
-    @Test
-    void testCreateDonationPendingStatus() {
-        String status = DonationStatus.PENDING.getValue();
-        LocalDateTime now = LocalDateTime.now();
-        Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
-            169500,
-            status,
-            now,
-            null
-        );
-
-        assertNotNull(donation);
-        assertEquals("13652556-012a-4c07-b546-54eb1396d79b", donation.getDonationId());
-        assertEquals("eb558e9f-1c39-460e-8860-71af6af63bd6", donation.getCampaignId());
-        assertEquals(123L, donation.getDonaturId());
-        assertEquals(169500, donation.getAmount());
-        assertEquals(status, donation.getStatus());
-        assertEquals(now, donation.getDatetime());
-        assertNull(donation.getMessage());
-    }
-
-    @Test
-    void testCreateDonationCanceledStatus() {
-        String status = DonationStatus.CANCELED.getValue();
-        LocalDateTime now = LocalDateTime.now();
-        Donation donation = new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
-            169500,
-            status,
-            now,
-            null
-        );
-
-        assertNotNull(donation);
-        assertEquals("13652556-012a-4c07-b546-54eb1396d79b", donation.getDonationId());
-        assertEquals("eb558e9f-1c39-460e-8860-71af6af63bd6", donation.getCampaignId());
-        assertEquals(123L, donation.getDonaturId());
-        assertEquals(169500, donation.getAmount());
-        assertEquals(status, donation.getStatus());
-        assertEquals(now, donation.getDatetime());
-        assertNull(donation.getMessage());
+        for (DonationStatus ds : DonationStatus.values()) {
+            Donation donation = new Donation(
+                donationId,
+                campaignId,
+                donaturId,
+                100,
+                ds.getValue(),
+                now
+            );
+            assertEquals(ds.getValue(), donation.getStatus());
+        }
     }
 
     @Test
     void testCreateDonationInvalidStatus() {
         LocalDateTime now = LocalDateTime.now();
         assertThrows(IllegalArgumentException.class, () -> new Donation(
-            "13652556-012a-4c07-b546-54eb1396d79b",
-            "eb558e9f-1c39-460e-8860-71af6af63bd6",
-            123L,
+            donationId,
+            campaignId,
+            donaturId,
             1,
-            "Halah mbuh sirahku ngelu",
+            "INVALID_STATUS",
             now
         ));
     }
@@ -287,7 +207,7 @@ class DonationTest {
         assertNotNull(donation);
         assertNull(donation.getDonationId());
         assertNull(donation.getCampaignId());
-        assertEquals(0L, donation.getDonaturId());
+        assertNull(donation.getDonaturId());
         assertEquals(0, donation.getAmount());
         assertNull(donation.getStatus());
         assertNull(donation.getDatetime());

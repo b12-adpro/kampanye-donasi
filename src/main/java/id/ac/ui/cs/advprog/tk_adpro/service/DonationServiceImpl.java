@@ -12,11 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DonationServiceImpl implements DonationService {
     @Autowired
     private DonationRepository donationRepository;
+
     private PaymentStrategy paymentStrategy;
 
     @Override
@@ -42,7 +44,7 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
-    public Donation completeDonation(String donationId) {
+    public Donation completeDonation(UUID donationId) {
         Donation donation = donationRepository.findByDonationId(donationId);
         DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
         currentState.complete(donation);
@@ -50,7 +52,7 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
-    public Donation cancelDonation(String donationId) {
+    public Donation cancelDonation(UUID donationId) {
         Donation donation = donationRepository.findByDonationId(donationId);
         DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
         currentState.cancel(donation);
@@ -59,22 +61,22 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
-    public Donation getDonationByDonationId(String donationId) {
+    public Donation getDonationByDonationId(UUID donationId) {
         return donationRepository.findByDonationId(donationId);
     }
 
     @Override
-    public List<Donation> getDonationsByDonaturId(long donaturId) {
+    public List<Donation> getDonationsByDonaturId(UUID donaturId) {
         return donationRepository.findByDonaturId(donaturId);
     }
 
     @Override
-    public List<Donation> getDonationsByCampaignId(String campaignId) {
+    public List<Donation> getDonationsByCampaignId(UUID campaignId) {
         return donationRepository.findByCampaignId(campaignId);
     }
 
     @Override
-    public Donation updateDonationMessage(String donationId, String newMessage) {
+    public Donation updateDonationMessage(UUID donationId, String newMessage) {
         Donation donation = donationRepository.findByDonationId(donationId);
         if (donation != null) {
             donation.setMessage(newMessage);
@@ -84,7 +86,7 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
-    public Donation deleteDonationMessage(String donationId) {
+    public Donation deleteDonationMessage(UUID donationId) {
         Donation donation = donationRepository.findByDonationId(donationId);
         if (donation != null) {
             donation.setMessage(null);
