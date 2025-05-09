@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -14,9 +15,11 @@ class CampaignStatusStateTest{
 
     @BeforeEach
     void setUp() {
+        UUID uuidCampaign = UUID.randomUUID();
+        UUID uuidFundraiser = UUID.randomUUID();
         baseCampaign = new Campaign(
-                "camp1",
-                "fund1",
+                uuidCampaign,
+                uuidFundraiser,
                 "Donation Campaign",
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
