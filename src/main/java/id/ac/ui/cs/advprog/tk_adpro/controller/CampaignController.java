@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/campaign")
@@ -25,7 +26,7 @@ public class CampaignController {
     private CampaignService campaignService;
 
     @PostMapping("/{fundraiserId}/campaign")
-    public ResponseEntity<Campaign> verifyCampaign(@PathVariable String fundraiserId, @RequestBody Campaign campaign) {
+    public ResponseEntity<Campaign> verifyCampaign(@PathVariable UUID fundraiserId, @RequestBody Campaign campaign) {
         Campaign savedCampaign = campaignService.createCampaign(campaign);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedCampaign);
     }
@@ -37,25 +38,25 @@ public class CampaignController {
     }
 
     @PutMapping("/{campaignId}/activate")
-    public ResponseEntity<Void> activateCampaign(@PathVariable String campaignId) {
+    public ResponseEntity<Void> activateCampaign(@PathVariable UUID campaignId) {
         campaignService.activateCampaign(campaignId);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{campaignId}/inactivate")
-    public ResponseEntity<Void> inactivateCampaign(@PathVariable String campaignId) {
+    public ResponseEntity<Void> inactivateCampaign(@PathVariable UUID campaignId) {
         campaignService.inactivateCampaign(campaignId);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/fundraiserId/{fundraiserId}")
-    public ResponseEntity<List<Campaign>> getCampaignByFundraiserId(@PathVariable String fundraiserId) {
+    public ResponseEntity<List<Campaign>> getCampaignByFundraiserId(@PathVariable UUID fundraiserId) {
         List<Campaign> campaigns = campaignService.getCampaignByFundraiserId(fundraiserId);
         return ResponseEntity.ok(campaigns);
     }
 
     @GetMapping("/campaignId/{campaignId}")
-    public ResponseEntity<Campaign> getCampaignByCampaignId(@PathVariable String campaignId) {
+    public ResponseEntity<Campaign> getCampaignByCampaignId(@PathVariable UUID campaignId) {
         Campaign campaign = campaignService.getCampaignByCampaignId(campaignId);
         if (campaign != null) {
             return ResponseEntity.ok(campaign);
@@ -71,7 +72,7 @@ public class CampaignController {
     }
 
     @DeleteMapping("/{campaignId}/delete")
-    public ResponseEntity<Void> deleteCampaign(@PathVariable String campaignId) {
+    public ResponseEntity<Void> deleteCampaign(@PathVariable UUID campaignId) {
         campaignService.deleteCampaign(campaignId);
         return ResponseEntity.ok().build();
     }

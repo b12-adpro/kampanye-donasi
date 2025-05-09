@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -36,8 +37,10 @@ public class CampaignControllerTest {
 
     @Test
     void testVerifyCampaign() throws Exception {
+        UUID uuidCampaign = UUID.randomUUID();
+        UUID uuidFundraiser = UUID.randomUUID();
         Campaign campaign = new Campaign(
-                "campaign123", "fundraiser123", "Judul",
+                uuidCampaign, uuidFundraiser, "Judul",
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(), 100000, "Deskripsi");
 
@@ -47,7 +50,7 @@ public class CampaignControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaign)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.campaignId").value("campaign123"))
+                .andExpect(jsonPath("$.campaignId").value(uuidCampaign.toString()))
                 .andExpect(jsonPath("$.judul").value("Judul"));
 
         verify(campaignService).createCampaign(any(Campaign.class));
@@ -55,8 +58,10 @@ public class CampaignControllerTest {
 
     @Test
     void testCreateCampaign() throws Exception {
+        UUID uuidCampaign = UUID.randomUUID();
+        UUID uuidFundraiser = UUID.randomUUID();
         Campaign campaign = new Campaign(
-                "campaign456", "fundraiser456", "Judul Baru",
+                uuidCampaign, uuidFundraiser, "Judul Baru",
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(), 50000, "Deskripsi");
 
@@ -66,7 +71,7 @@ public class CampaignControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaign)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.campaignId").value("campaign456"))
+                .andExpect(jsonPath("$.campaignId").value(uuidCampaign.toString()))
                 .andExpect(jsonPath("$.judul").value("Judul Baru"));
 
         verify(campaignService).createCampaign(any(Campaign.class));
@@ -74,7 +79,7 @@ public class CampaignControllerTest {
 
     @Test
     void testActivateCampaign() throws Exception {
-        String campaignId = "campaign123";
+        UUID campaignId = UUID.randomUUID();
 
         mockMvc.perform(put("/api/campaign/{campaignId}/activate", campaignId))
                 .andExpect(status().isOk());
@@ -84,7 +89,7 @@ public class CampaignControllerTest {
 
     @Test
     void testInactivateCampaign() throws Exception {
-        String campaignId = "campaign456";
+        UUID campaignId = UUID.randomUUID();
 
         mockMvc.perform(put("/api/campaign/{campaignId}/inactivate", campaignId))
                 .andExpect(status().isOk());
@@ -94,32 +99,37 @@ public class CampaignControllerTest {
 
     @Test
     void testGetCampaignByFundraiserId() throws Exception {
-        String fundraiserId = "fundraiser789";
-        Campaign c1 = new Campaign("1", fundraiserId, "A", "ACTIVE", LocalDateTime.now(), 1000, "desc");
-        Campaign c2 = new Campaign("2", fundraiserId, "B", "ACTIVE", LocalDateTime.now(), 2000, "desc");
+        UUID campaignId = UUID.randomUUID();
+        UUID fundraiserId = UUID.randomUUID();
+        Campaign c1 = new Campaign(campaignId, fundraiserId, "A", "ACTIVE", LocalDateTime.now(), 1000, "desc");
+        Campaign c2 = new Campaign(campaignId, fundraiserId, "B", "ACTIVE", LocalDateTime.now(), 2000, "desc");
 
         when(campaignService.getCampaignByFundraiserId(fundraiserId)).thenReturn(Arrays.asList(c1, c2));
 
         mockMvc.perform(get("/api/campaign/fundraiserId/{fundraiserId}", fundraiserId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].campaignId").value("1"));
+                .andExpect(jsonPath("$[0].campaignId").value(campaignId.toString()));
     }
 
     @Test
     void testGetCampaignByCampaignId() throws Exception {
-        Campaign campaign = new Campaign("c123", "f123", "Judul", "ACTIVE", LocalDateTime.now(), 3000, "desc");
+        UUID campaignId = UUID.randomUUID();
+        UUID fundraiserId = UUID.randomUUID();
+        Campaign campaign = new Campaign(campaignId, fundraiserId, "Judul", "ACTIVE", LocalDateTime.now(), 3000, "desc");
 
-        when(campaignService.getCampaignByCampaignId("c123")).thenReturn(campaign);
+        when(campaignService.getCampaignByCampaignId(campaignId)).thenReturn(campaign);
 
-        mockMvc.perform(get("/api/campaign/campaignId/{campaignId}", "c123"))
+        mockMvc.perform(get("/api/campaign/campaignId/{campaignId}", campaignId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.campaignId").value("c123"));
+                .andExpect(jsonPath("$.campaignId").value(campaignId.toString()));
     }
 
     @Test
     public void testUpdateCampaign() throws Exception {
-        Campaign campaign = new Campaign("123", "f1", "Updated", "ACTIVE", LocalDateTime.now(), 100, "desc");
+        UUID campaignId = UUID.randomUUID();
+        UUID fundraiserId = UUID.randomUUID();
+        Campaign campaign = new Campaign(campaignId, fundraiserId, "Updated", "ACTIVE", LocalDateTime.now(), 100, "desc");
         mockMvc.perform(put("/api/campaign/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaign)))
@@ -134,9 +144,10 @@ public class CampaignControllerTest {
 
     @Test
     public void testDeleteCampaign() throws Exception {
-        mockMvc.perform(delete("/api/campaign/{campaignId}/delete", "123"))
+        UUID campaignId = UUID.randomUUID();
+        mockMvc.perform(delete("/api/campaign/{campaignId}/delete", campaignId))
                 .andExpect(status().isOk());
 
-        Mockito.verify(campaignService).deleteCampaign("123");
+        Mockito.verify(campaignService).deleteCampaign(campaignId);
     }
 }
