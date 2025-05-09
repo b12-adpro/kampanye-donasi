@@ -45,7 +45,7 @@ public class Donation {
             throw new IllegalArgumentException("DonaturId is must not be null!");
         }
         if (amount < 0) {
-            throw new IllegalArgumentException("Amount cant be negative!");
+            throw new IllegalArgumentException("Amount can't be negative!");
         }
         if (!DonationStatus.contains(status)) {
             throw new IllegalArgumentException("Status is not valid!");
