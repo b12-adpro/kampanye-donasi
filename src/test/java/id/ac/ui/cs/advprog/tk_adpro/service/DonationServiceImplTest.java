@@ -175,7 +175,7 @@ class DonationServiceImplTest {
 
         DonationStatusState mockState = mock(DonationStatusState.class);
         doAnswer(invocation -> {
-            donation.setStatus(DonationStatus.CANCELLED.getValue());
+            donation.setStatus(DonationStatus.CANCELED.getValue());
             return null;
         }).when(mockState).cancel(any(Donation.class));
 
@@ -190,7 +190,7 @@ class DonationServiceImplTest {
 
             verify(mockState, times(1)).cancel(donation);
             verify(donationRepository, times(1)).save(donation);
-            assertEquals(DonationStatus.CANCELLED.getValue(), donation.getStatus());
+            assertEquals(DonationStatus.CANCELED.getValue(), donation.getStatus());
         }
     }
 
