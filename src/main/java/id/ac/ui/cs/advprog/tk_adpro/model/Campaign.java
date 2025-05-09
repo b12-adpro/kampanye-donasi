@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
 import lombok.*;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -11,15 +12,15 @@ import lombok.*;
 @Builder
 public class Campaign {
 
-    private String campaignId;
-    private String fundraiserId;
+    private UUID campaignId;
+    private UUID fundraiserId;
     private String judul;
     private String status;
     private LocalDateTime datetime;
     private int target;
     private String deskripsi;
 
-    public Campaign(String campaignId, String fundraiserId, String judul, String status, LocalDateTime datetime, int target, String deskripsi) {
+    public Campaign(UUID campaignId, UUID fundraiserId, String judul, String status, LocalDateTime datetime, int target, String deskripsi) {
         validateCommonFields(campaignId, fundraiserId, judul, status, target);
         this.campaignId = campaignId;
         this.fundraiserId = fundraiserId;
@@ -30,17 +31,17 @@ public class Campaign {
         this.deskripsi = deskripsi;
     }
 
-    public Campaign(String campaignId, String fundraiserId, String judul, String status, LocalDateTime datetime, int target) {
+    public Campaign(UUID campaignId, UUID fundraiserId, String judul, String status, LocalDateTime datetime, int target) {
         this(campaignId, fundraiserId, judul, status, datetime, target, null);
     }
 
-    private void validateCommonFields(String campaignId, String fundraiserId, String judul, String status, int target) {
-        if (campaignId == null || campaignId.isEmpty()) {
-            throw new IllegalArgumentException("Campaign Id must not be null or empty!");
+    private void validateCommonFields(UUID campaignId, UUID fundraiserId, String judul, String status, int target) {
+        if (campaignId == null) {
+            throw new IllegalArgumentException("Campaign Id must not be null!");
         }
 
-        if (fundraiserId == null || fundraiserId.isEmpty()) {
-            throw new IllegalArgumentException("Fundraiser Id must not be null or empty!");
+        if (fundraiserId == null) {
+            throw new IllegalArgumentException("Fundraiser Id must not be null!");
         }
 
         if (judul == null || judul.isEmpty()) {
