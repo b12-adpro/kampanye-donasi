@@ -42,7 +42,7 @@ public class Donation {
             throw new IllegalArgumentException("Campaign Id must not be null!");
         }
         if (donaturId == null) {
-            throw new IllegalArgumentException("DonaturId is not valid!");
+            throw new IllegalArgumentException("DonaturId is must not be null!");
         }
         if (amount < 0) {
             throw new IllegalArgumentException("Amount cant be negative!");
