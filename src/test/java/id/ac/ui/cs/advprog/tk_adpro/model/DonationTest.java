@@ -9,9 +9,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DonationTest {
-    private final UUID donationId = UUID.randomUUID();
-    private final UUID campaignId = UUID.randomUUID();
-    private final UUID donaturId = UUID.randomUUID();
+    private static final UUID donationId = UUID.randomUUID();
+    private static final UUID campaignId = UUID.randomUUID();
+    private static final UUID donaturId = UUID.randomUUID();
 
     @Test
     void testCreateDonationWithMessage() {
