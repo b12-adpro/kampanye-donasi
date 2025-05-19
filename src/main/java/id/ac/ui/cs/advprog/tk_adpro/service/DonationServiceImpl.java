@@ -7,18 +7,20 @@ import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusState;
 import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusStateFactory;
 import id.ac.ui.cs.advprog.tk_adpro.strategy.PaymentStrategy;
 import id.ac.ui.cs.advprog.tk_adpro.exception.InsufficientBalanceException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Optional;
 
 @Service
 public class DonationServiceImpl implements DonationService {
     @Autowired
     private DonationRepository donationRepository;
 
+    @Autowired
     private PaymentStrategy paymentStrategy;
 
     @Override
@@ -30,39 +32,46 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
+    @Transactional
     public Donation createDonation(Donation donation) {
         if (donation.getStatus().equals(DonationStatus.COMPLETED.getValue())) {
             boolean paymentSuccess = paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount());
-
             if (!paymentSuccess) {
                 throw new InsufficientBalanceException("Not enough balance!");
             }
             //TODO: Notify Campaign
         }
-        donationRepository.save(donation);
-        return donation;
+        
+        return donationRepository.save(donation);
     }
 
     @Override
+    @Transactional
     public Donation completeDonation(UUID donationId) {
-        Donation donation = donationRepository.findByDonationId(donationId);
+        Donation donation = getDonationByIdOrThrow(donationId);
         DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
         currentState.complete(donation);
         return createDonation(donation);
     }
 
     @Override
+    @Transactional
     public Donation cancelDonation(UUID donationId) {
-        Donation donation = donationRepository.findByDonationId(donationId);
+        Donation donation = getDonationByIdOrThrow(donationId);
         DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
         currentState.cancel(donation);
-        donationRepository.save(donation);
-        return donation;
+        return donationRepository.save(donation);
     }
 
     @Override
     public Donation getDonationByDonationId(UUID donationId) {
-        return donationRepository.findByDonationId(donationId);
+        Optional<Donation> donation = donationRepository.findById(donationId);
+        return donation.orElse(null);
+    }
+    
+    private Donation getDonationByIdOrThrow(UUID donationId) {
+        return donationRepository.findById(donationId)
+            .orElseThrow(() -> new RuntimeException("Donation not found with id: " + donationId));
     }
 
     @Override
@@ -76,22 +85,18 @@ public class DonationServiceImpl implements DonationService {
     }
 
     @Override
+    @Transactional
     public Donation updateDonationMessage(UUID donationId, String newMessage) {
-        Donation donation = donationRepository.findByDonationId(donationId);
-        if (donation != null) {
-            donation.setMessage(newMessage);
-            return donationRepository.save(donation);
-        }
-        return null;
+        Donation donation = getDonationByIdOrThrow(donationId);
+        donation.setMessage(newMessage);
+        return donationRepository.save(donation);
     }
 
     @Override
+    @Transactional
     public Donation deleteDonationMessage(UUID donationId) {
-        Donation donation = donationRepository.findByDonationId(donationId);
-        if (donation != null) {
-            donation.setMessage(null);
-            return donationRepository.save(donation);
-        }
-        return null;
+        Donation donation = getDonationByIdOrThrow(donationId);
+        donation.setMessage(null);
+        return donationRepository.save(donation);
     }
 }
