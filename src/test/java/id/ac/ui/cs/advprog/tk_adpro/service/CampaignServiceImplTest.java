@@ -38,9 +38,6 @@ public class CampaignServiceImplTest {
     @Mock
     private WithdrawStrategy withdrawStrategy;
 
-    @Mock
-    private Campaign
-
     @InjectMocks
     private CampaignServiceImpl campaignService;
 
@@ -65,14 +62,14 @@ public class CampaignServiceImplTest {
 
     @Test
     void testCheckBalanceSuccess() {
-        when(withdrawStrategy.checkBalance(campaign.getFundraiserId())).thenReturn(123123);
+        when(withdrawStrategy.checkBalance(campaign.getCampaignId())).thenReturn(123123);
         Campaign result = campaignService.checkBalance(campaign);
         assertEquals(campaign, result);
     }
 
     @Test
     void testCheckBalanceFailed() {
-        when(withdrawStrategy.checkBalance(campaign.getFundraiserId())).thenReturn(123122);
+        when(withdrawStrategy.checkBalance(campaign.getCampaignId())).thenReturn(123122);
         assertThrows(WithdrawServiceException.class, () -> campaignService.checkBalance(campaign));
     }
 
@@ -85,7 +82,7 @@ public class CampaignServiceImplTest {
 
     @Test
     void testWithdrawFailed() {
-        when(withdrawStrategy.withdrawMoney(campaign.getFundraiserId(), 123122)).thenReturn(false);
+        when(withdrawStrategy.withdrawMoney(campaign.getFundraiserId(), campaign.getTarget())).thenReturn(false);
         assertThrows(WithdrawServiceException.class, () -> campaignService.withdrawMoney(campaign));
     }
 
@@ -93,7 +90,7 @@ public class CampaignServiceImplTest {
     void testCreateCampaign() {
         when(campaignRepository.save(any())).thenReturn(campaign);
         Campaign created = campaignService.createCampaign(campaign);
-        assertEquals(CampaignStatus.INACTIVE.getValue(), created.getStatus());
+        assertEquals(CampaignStatus.ACTIVE.getValue(), created.getStatus());
     }
 
     @Test

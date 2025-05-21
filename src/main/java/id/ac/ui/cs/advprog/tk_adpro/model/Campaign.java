@@ -61,10 +61,6 @@ public class Campaign {
     }
 
     private void validateCommonFields(UUID campaignId, UUID fundraiserId, String judul, String status, int target) {
-        if (campaignId == null) {
-            throw new IllegalArgumentException("Campaign Id must not be null!");
-        }
-
         if (fundraiserId == null) {
             throw new IllegalArgumentException("Fundraiser Id must not be null!");
         }
