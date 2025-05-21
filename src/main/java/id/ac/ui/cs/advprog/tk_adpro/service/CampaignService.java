@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface CampaignService {
+    Campaign checkBalance(Campaign campaign);
+    Campaign withdrawMoney(Campaign campaign);
     Campaign createCampaign(Campaign campaign);
     void activateCampaign(UUID campaignId);
     void inactivateCampaign(UUID campaignId);

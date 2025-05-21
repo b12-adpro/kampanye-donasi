@@ -2,11 +2,9 @@ package id.ac.ui.cs.advprog.tk_adpro;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-@SpringBootTest
 class TkAdproApplicationTests {
     @Test
     void testMainMethod() {

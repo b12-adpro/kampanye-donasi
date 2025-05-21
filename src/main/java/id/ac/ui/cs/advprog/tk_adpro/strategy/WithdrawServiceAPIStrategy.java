@@ -16,6 +16,7 @@ import id.ac.ui.cs.advprog.tk_adpro.exception.WithdrawServiceException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class WithdrawServiceAPIStrategy implements WithdrawStrategy {
     }
 
     @Override
-    public int checkBalance(String fundraiserId) {
+    public int checkBalance(UUID fundraiserId) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -86,7 +87,7 @@ public class WithdrawServiceAPIStrategy implements WithdrawStrategy {
     }
 
     @Override
-    public boolean withdrawMoney(String fundraiserId, int amount) {
+    public boolean withdrawMoney(UUID fundraiserId, int amount) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);

@@ -1,6 +1,8 @@
 package id.ac.ui.cs.advprog.tk_adpro.strategy;
 
+import java.util.UUID;
+
 public interface WithdrawStrategy {
-    int checkBalance(String fundraiserId);
-    boolean withdrawMoney(String fundraiserId, int amount);
+    int checkBalance(UUID fundraiserId);
+    boolean withdrawMoney(UUID fundraiserId, int amount);
 }
