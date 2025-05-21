@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testCheckBalanceSuccess() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("balance", 100);
 
@@ -59,7 +60,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testCheckBalanceInvalidFormat() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("balance", "invalid");
 
@@ -80,7 +81,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testCheckBalanceHttpClientError() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
 
         when(restTemplate.exchange(
                 eq("http://dummy-withdraw-service.com/api/checkBalance"),
@@ -97,7 +98,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testCheckBalanceResourceAccessException() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
 
         when(restTemplate.exchange(
                 eq("http://dummy-withdraw-service.com/api/checkBalance"),
@@ -114,7 +115,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testWithdrawMoneySuccess() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
         int amount = 50;
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("success", true);
@@ -134,7 +135,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testWithdrawMoneyDeclined() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
         int amount = 50;
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("success", false);
@@ -154,7 +155,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testWithdrawMoneyInvalidFormat() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
         int amount = 50;
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("success", "not a boolean");
@@ -176,7 +177,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testProcessPaymentHttpClientError() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
         int amount = 50;
 
         when(restTemplate.exchange(
@@ -194,7 +195,7 @@ class WithdrawServiceApiStrategyTest {
 
     @Test
     void testProcessPaymentResourceAccessException() {
-        String fundraiserId = "eb558e9f-1c39-460e-8860-71af6af63bd6";
+        UUID fundraiserId = UUID.randomUUID();
         int amount = 50;
 
         when(restTemplate.exchange(
