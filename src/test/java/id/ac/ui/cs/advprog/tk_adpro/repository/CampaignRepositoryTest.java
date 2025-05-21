@@ -3,22 +3,25 @@ package id.ac.ui.cs.advprog.tk_adpro.repository;
 import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
 import id.ac.ui.cs.advprog.tk_adpro.model.Campaign;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
 
+@DataJpaTest
 class CampaignRepositoryTest {
+    @Autowired
     CampaignRepository campaignRepository;
-    UUID uuidCampaign = UUID.randomUUID();
-    UUID uuidFundraiser = UUID.randomUUID();
+
     Campaign campaign = new Campaign(
-            uuidCampaign,
-            uuidFundraiser,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             "Donation Campaign",
             CampaignStatus.ACTIVE.getValue(),
             LocalDateTime.now(),
@@ -26,30 +29,30 @@ class CampaignRepositoryTest {
             "Ini deskripsi."
     );
 
-    @BeforeEach
-    void setUp() {
-        campaignRepository = new CampaignRepository();
-    }
-
     @Test
     void testSaveCreate() {
-        Campaign result = campaignRepository.save(campaign);
-        assertEquals(campaign.getCampaignId(), result.getCampaignId());
-        assertEquals(campaign.getFundraiserId(), result.getFundraiserId());
-        assertEquals(campaign.getJudul(), result.getJudul());
-        assertEquals(campaign.getDatetime(), result.getDatetime());
-        assertEquals(campaign.getTarget(), result.getTarget());
-        assertEquals(campaign.getDeskripsi(), result.getDeskripsi());
+        Campaign saved = campaignRepository.save(campaign);
+        assertNotNull(saved.getCampaignId());
+
+        Optional<Campaign> foundOpt = campaignRepository.findById(saved.getCampaignId());
+        assertTrue(foundOpt.isPresent());
+
+        Campaign found = foundOpt.get();
+        assertEquals(campaign.getCampaignId(), found.getCampaignId());
+        assertEquals(campaign.getFundraiserId(), found.getFundraiserId());
+        assertEquals(campaign.getJudul(), found.getJudul());
+        assertEquals(campaign.getDatetime(), found.getDatetime());
+        assertEquals(campaign.getTarget(), found.getTarget());
+        assertEquals(campaign.getDeskripsi(), found.getDeskripsi());
     }
 
     @Test
     void testSaveUpdate() {
         campaignRepository.save(campaign);
-        UUID uuidCampaign = UUID.randomUUID();
-        UUID uuidFundraiser = UUID.randomUUID();
+
         Campaign newCampaign = new Campaign(
-                uuidCampaign,
-                uuidFundraiser,
+                campaign.getCampaignId(),
+                campaign.getFundraiserId(),
                 "Donation Campaign 2",
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
@@ -57,7 +60,10 @@ class CampaignRepositoryTest {
                 "Ini deskripsi 2."
         );
         Campaign result = campaignRepository.save(newCampaign);
-        Campaign findResult = campaignRepository.findByCampaignId(newCampaign.getCampaignId());
+        Optional<Campaign> findOpt = campaignRepository.findById(campaign.getCampaignId());
+        assertTrue(findOpt.isPresent());
+
+        Campaign findResult = findOpt.get();
 
         assertEquals(result.getCampaignId(), findResult.getCampaignId());
         assertEquals(result.getFundraiserId(), findResult.getFundraiserId());
@@ -70,19 +76,15 @@ class CampaignRepositoryTest {
     @Test
     void testFindByCampaignIdIfCampaignIdFound() {
         campaignRepository.save(campaign);
-        Campaign result = campaignRepository.findByCampaignId(campaign.getCampaignId());
-        assertEquals(campaign.getCampaignId(), result.getCampaignId());
-        assertEquals(campaign.getFundraiserId(), result.getFundraiserId());
-        assertEquals(campaign.getJudul(), result.getJudul());
-        assertEquals(campaign.getDatetime(), result.getDatetime());
-        assertEquals(campaign.getTarget(), result.getTarget());
-        assertEquals(campaign.getDeskripsi(), result.getDeskripsi());
+        Optional<Campaign> result = campaignRepository.findById(campaign.getCampaignId());
+        assertTrue(result.isPresent());
+        assertEquals(campaign.getCampaignId(), result.get().getCampaignId());
     }
 
     @Test
     void testFindByIdCampaignIdIfCampaignIdNotFound() {
-        Campaign result = campaignRepository.findByCampaignId(null);
-        assertNull(result);
+        Optional<Campaign> result = campaignRepository.findById(UUID.randomUUID());
+        assertFalse(result.isPresent());
     }
 
     @Test
@@ -94,7 +96,7 @@ class CampaignRepositoryTest {
 
     @Test
     void testFindByFundraiserIdIfIdFundraiserNotFound() {
-        List<Campaign> campaignList = campaignRepository.findByFundraiserId(null);
+        List<Campaign> campaignList = campaignRepository.findByFundraiserId(UUID.randomUUID());
         assertTrue(campaignList.isEmpty());
     }
 
