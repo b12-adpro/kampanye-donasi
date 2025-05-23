@@ -17,6 +17,7 @@ import org.mockito.MockedStatic;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -72,10 +73,14 @@ class DonationServiceImplTest {
             LocalDateTime.now(),
             "Get well soon!"
         );
-        when(paymentStrategy.processPayment(donaturId, 169500)).thenReturn(true);
+        when(paymentStrategy.checkBalance(donaturId)).thenReturn(200000);
+
+        CompletableFuture<Void> successFuture = CompletableFuture.completedFuture(null);
+        when(paymentStrategy.processPayment(donaturId, 169500)).thenReturn(successFuture);
         when(donationRepository.save(donation)).thenReturn(donation);
 
         Donation result = donationService.createDonation(donation);
+        verify(paymentStrategy).checkBalance(donaturId);
         verify(paymentStrategy).processPayment(donaturId, 169500);
         verify(donationRepository).save(donation);
         assertEquals(donation, result);
@@ -93,9 +98,24 @@ class DonationServiceImplTest {
             LocalDateTime.now(),
             "Get well soon!"
         );
-        when(paymentStrategy.processPayment(donaturId, 169500)).thenReturn(false);
 
-        assertThrows(InsufficientBalanceException.class, () -> donationService.createDonation(donation));
+        DonationStatusState mockState = mock(DonationStatusState.class);
+        doAnswer(invocation -> {
+            donation.setStatus(DonationStatus.PENDING.getValue());
+            return null;
+        }).when(mockState).pending(any(Donation.class));
+
+        try (MockedStatic<DonationStatusStateFactory> factoryMock = mockStatic(DonationStatusStateFactory.class)) {
+            factoryMock.when(() -> DonationStatusStateFactory.getState(donation)).thenReturn(mockState);
+            when(paymentStrategy.checkBalance(donaturId)).thenThrow(new InsufficientBalanceException("Not enough balance"));
+            when(donationRepository.save(donation)).thenReturn(donation);
+
+            Donation result = donationService.createDonation(donation);
+            verify(paymentStrategy).checkBalance(donaturId);
+            verify(mockState).pending(donation);
+            verify(donationRepository).save(donation);
+            assertEquals(DonationStatus.PENDING.getValue(), result.getStatus());
+        }
     }
 
     @Test
@@ -148,6 +168,7 @@ class DonationServiceImplTest {
             LocalDateTime.now(),
             "Get well soon!"
         );
+
         DonationStatusState mockState = mock(DonationStatusState.class);
         doAnswer(invocation -> {
             donation.setStatus(DonationStatus.COMPLETED.getValue());
@@ -155,15 +176,14 @@ class DonationServiceImplTest {
         }).when(mockState).complete(any(Donation.class));
 
         try (MockedStatic<DonationStatusStateFactory> factoryMock = mockStatic(DonationStatusStateFactory.class)) {
-            when(donationRepository.findById(donation.getDonationId())).thenReturn(Optional.of(donation));
             factoryMock.when(() -> DonationStatusStateFactory.getState(donation)).thenReturn(mockState);
-            when(paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount())).thenReturn(true);
+            when(donationRepository.findById(donation.getDonationId())).thenReturn(Optional.of(donation));
+            when(paymentStrategy.checkBalance(donation.getDonaturId())).thenReturn(200000);
             when(donationRepository.save(donation)).thenReturn(donation);
 
             donationService.completeDonation(donation.getDonationId());
-
+            verify(paymentStrategy).checkBalance(donation.getDonaturId());
             verify(mockState).complete(donation);
-            verify(paymentStrategy).processPayment(donation.getDonaturId(), donation.getAmount());
             verify(donationRepository).save(donation);
             assertEquals(DonationStatus.COMPLETED.getValue(), donation.getStatus());
         }
