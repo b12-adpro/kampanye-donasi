@@ -6,6 +6,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,56 +91,48 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
     }
 
     @Override
-    public boolean processPayment(UUID donaturId, int amount) {
-        try {
-            // Prepare HTTP headers and body for JSON communication
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+    @Async
+    public CompletableFuture<Void> processPayment(UUID donaturId, int amount) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-            // Create request body as a map
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("donaturId", donaturId);
-            requestBody.put("amount", amount);
+                Map<String, Object> requestBody = Map.of(
+                    "donaturId", donaturId,
+                    "amount", amount
+                );
+                HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+                logger.debug("Memproses pembayaran untuk donatur: {} dengan jumlah: {}", donaturId, amount);
 
-            // Send POST request to the processPayment API
-            logger.debug("Processing payment request to: {} for donatur: {} amount: {}", PROCESS_PAYMENT_URL, donaturId, amount);
+                ResponseEntity<Map> response = restTemplate.exchange(
+                    PROCESS_PAYMENT_URL,
+                    HttpMethod.POST,
+                    requestEntity,
+                    Map.class
+                );
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                PROCESS_PAYMENT_URL,
-                HttpMethod.POST,
-                requestEntity,
-                Map.class
-            );
+                if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                    throw new PaymentServiceException("Failed to process payment. Status: " + response.getStatusCode());
+                }
 
-            // Process response
-            Map body = response.getBody();
-            if (response.getStatusCode() == HttpStatus.OK && body != null) {
-                Object successObj = body.get("success");
-                if (successObj instanceof Boolean success) {
-                    if (!success.booleanValue()) {
-                        logger.warn("Payment declined for donaturId: {}, amount: {}", donaturId, amount);
-                    }
-                    return success.booleanValue();
-                } else {
-                    logger.error("Invalid success response format received: {}", successObj);
+                Object successObj = response.getBody().get("success");
+                if (!(successObj instanceof Boolean success)) {
                     throw new PaymentServiceException("Invalid response format from payment service");
                 }
-            }
-            logger.error("Failed to process payment. Status code: {}", response.getStatusCode());
-            throw new PaymentServiceException("Failed to process payment. Status: " + response.getStatusCode());
+                if (!success) {
+                    logger.warn("Payment declined for donaturId: {}, amount: {}", donaturId, amount);
+                } else {
+                    logger.info("Payment succeeded for donaturId: {}, amount: {}", donaturId, amount);
+                }
 
-        } catch (HttpClientErrorException e) {
-            logger.error("Payment service client error: {}", e.getMessage());
-            throw new PaymentServiceException("Payment service returned an error: " + e.getStatusCode());
-        } catch (ResourceAccessException e) {
-            logger.error("Cannot connect to payment service: {}", e.getMessage());
-            throw new PaymentServiceException("Cannot connect to payment service: " + e.getMessage());
-        } catch (Exception e) {
-            logger.error("Unexpected error during payment processing: {}", e.getMessage());
-            throw new PaymentServiceException("Unexpected error during payment processing: " + e.getMessage());
-        }
+            } catch (HttpClientErrorException e) {
+                throw new PaymentServiceException("Payment service returned an error: " + e.getStatusCode());
+            } catch (ResourceAccessException e) {
+                throw new PaymentServiceException("Cannot connect to payment service: " + e.getMessage());
+            }
+        });
     }
 }
