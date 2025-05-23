@@ -13,4 +13,9 @@ public class PendingDonationStatusState implements DonationStatusState {
     public void complete(Donation donation) {
         donation.setStatus(DonationStatus.COMPLETED.getValue());
     }
+
+    @Override
+    public void pending(Donation donation) {
+        throw new IllegalStateException("Donation is already pending.");
+    }
 }
