@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusState;
 import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusStateFactory;
 import id.ac.ui.cs.advprog.tk_adpro.strategy.PaymentStrategy;
 import id.ac.ui.cs.advprog.tk_adpro.exception.InsufficientBalanceException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,13 +36,15 @@ public class DonationServiceImpl implements DonationService {
     @Transactional
     public Donation createDonation(Donation donation) {
         if (donation.getStatus().equals(DonationStatus.COMPLETED.getValue())) {
-            boolean paymentSuccess = paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount());
-            if (!paymentSuccess) {
-                throw new InsufficientBalanceException("Not enough balance!");
+            try {
+                checkBalance(donation);
+                paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount());
+                //TODO: Notify Campaign
+            } catch (InsufficientBalanceException e) {
+                DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
+                currentState.pending(donation);
             }
-            //TODO: Notify Campaign
         }
-        
         return donationRepository.save(donation);
     }
 
@@ -68,7 +71,7 @@ public class DonationServiceImpl implements DonationService {
         Optional<Donation> donation = donationRepository.findById(donationId);
         return donation.orElse(null);
     }
-    
+
     private Donation getDonationByIdOrThrow(UUID donationId) {
         return donationRepository.findById(donationId)
             .orElseThrow(() -> new RuntimeException("Donation not found with id: " + donationId));
