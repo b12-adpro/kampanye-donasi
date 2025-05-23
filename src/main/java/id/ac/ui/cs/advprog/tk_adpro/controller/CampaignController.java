@@ -76,4 +76,18 @@ public class CampaignController {
         campaignService.deleteCampaign(campaignId);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/{campaignId}/bukti")
+    public ResponseEntity<String> getBuktiPenggalanganDana(@PathVariable UUID campaignId) {
+        try {
+            String bukti = campaignService.getBuktiPenggalanganDana(campaignId);
+            if (bukti != null && !bukti.isEmpty()) {
+                return ResponseEntity.ok(bukti);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

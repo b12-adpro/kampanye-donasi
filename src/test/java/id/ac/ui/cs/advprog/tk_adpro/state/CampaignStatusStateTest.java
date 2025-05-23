@@ -24,7 +24,8 @@ class CampaignStatusStateTest{
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
                 123123,
-                "Test campaign"
+                "Test campaign",
+                "\"http://example.com/bukti.jpg\""
         );
     }
 

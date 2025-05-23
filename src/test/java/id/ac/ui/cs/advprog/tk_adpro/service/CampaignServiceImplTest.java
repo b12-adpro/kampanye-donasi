@@ -1,28 +1,21 @@
 package id.ac.ui.cs.advprog.tk_adpro.service;
+
 import id.ac.ui.cs.advprog.tk_adpro.exception.WithdrawServiceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.junit.jupiter.api.Test;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
-import id.ac.ui.cs.advprog.tk_adpro.service.CampaignServiceImpl;
 import id.ac.ui.cs.advprog.tk_adpro.model.Campaign;
 import id.ac.ui.cs.advprog.tk_adpro.repository.CampaignRepository;
-import id.ac.ui.cs.advprog.tk_adpro.state.CampaignStatusState;
-import id.ac.ui.cs.advprog.tk_adpro.state.CampaignStatusStateFactory;
 import id.ac.ui.cs.advprog.tk_adpro.strategy.WithdrawStrategy;
-import id.ac.ui.cs.advprog.tk_adpro.exception.WithdrawServiceException;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -42,7 +35,7 @@ public class CampaignServiceImplTest {
     private CampaignServiceImpl campaignService;
 
     private Campaign campaign;
-
+    private final String sampleBukti = "http://example.com/bukti.jpg";
 
     @BeforeEach
     void setUp() {
@@ -56,7 +49,8 @@ public class CampaignServiceImplTest {
                 CampaignStatus.ACTIVE.getValue(),
                 now,
                 123123,
-                "Ini deskripsi."
+                "Ini deskripsi.",
+                sampleBukti
         );
     }
 
@@ -91,6 +85,7 @@ public class CampaignServiceImplTest {
         when(campaignRepository.save(any())).thenReturn(campaign);
         Campaign created = campaignService.createCampaign(campaign);
         assertEquals(CampaignStatus.ACTIVE.getValue(), created.getStatus());
+        assertEquals(sampleBukti, created.getBuktiPenggalanganDana());
     }
 
     @Test
@@ -102,7 +97,8 @@ public class CampaignServiceImplTest {
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
                 123123,
-                "Get well soon!"
+                "Get well soon!",
+                sampleBukti
         );
         when(campaignRepository.save(campaign1)).thenReturn(campaign1);
 
@@ -112,6 +108,7 @@ public class CampaignServiceImplTest {
                 .usingRecursiveComparison()
                 .ignoringFields("campaignId")
                 .isEqualTo(campaign1);
+        assertEquals(sampleBukti, result.getBuktiPenggalanganDana());
     }
 
     @Test
@@ -149,24 +146,13 @@ public class CampaignServiceImplTest {
     @Test
     void testGetCampaignByCampaignId() {
         UUID uuidDummyCampaign = UUID.randomUUID();
-        UUID uuidDummyFundraiser = UUID.randomUUID();
-        Campaign dummyCampaign = new Campaign(
-                uuidDummyCampaign,
-                uuidDummyFundraiser,
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        UUID uuidNewDummyCampaign = UUID.randomUUID();
-        dummyCampaign.setCampaignId(uuidNewDummyCampaign);
+        when(campaignRepository.findById(uuidDummyCampaign)).thenReturn(Optional.of(campaign));
+        campaign.setCampaignId(uuidDummyCampaign);
 
-        when(campaignRepository.findById(uuidNewDummyCampaign)).thenReturn(Optional.of(dummyCampaign));
+        Campaign result = campaignService.getCampaignByCampaignId(uuidDummyCampaign);
 
-        Campaign result = campaignService.getCampaignByCampaignId(uuidNewDummyCampaign);
-
-        assertEquals(uuidNewDummyCampaign, result.getCampaignId());
+        assertEquals(uuidDummyCampaign, result.getCampaignId());
+        assertEquals(sampleBukti, result.getBuktiPenggalanganDana());
     }
 
     @Test
@@ -180,59 +166,72 @@ public class CampaignServiceImplTest {
 
     @Test
     void testGetCampaignByFundraiserId() {
-        UUID uuidDummyCampaign = UUID.randomUUID();
-        UUID uuidDummyFundraiser = UUID.randomUUID();
-        Campaign dummyCampaign = new Campaign(
-                uuidDummyCampaign,
-                uuidDummyFundraiser,
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        UUID uuidNewDummyFundraiser = UUID.randomUUID();
-        dummyCampaign.setFundraiserId(uuidNewDummyFundraiser);
-        List<Campaign> dummyList = List.of(dummyCampaign);
+        UUID uuidDummyFundraiser = campaign.getFundraiserId();
+        List<Campaign> dummyList = List.of(campaign);
 
-        when(campaignRepository.findByFundraiserId(uuidNewDummyFundraiser)).thenReturn(dummyList);
+        when(campaignRepository.findByFundraiserId(uuidDummyFundraiser)).thenReturn(dummyList);
 
-        List<Campaign> result = campaignService.getCampaignByFundraiserId(uuidNewDummyFundraiser);
+        List<Campaign> result = campaignService.getCampaignByFundraiserId(uuidDummyFundraiser);
 
         assertEquals(1, result.size());
-        assertEquals(uuidNewDummyFundraiser, result.get(0).getFundraiserId());
+        assertEquals(uuidDummyFundraiser, result.get(0).getFundraiserId());
+        assertEquals(sampleBukti, result.get(0).getBuktiPenggalanganDana());
     }
 
     @Test
     void testUpdateCampaign() {
-        UUID uuidDummyCampaign = UUID.randomUUID();
-        UUID uuidDummyFundraiser = UUID.randomUUID();
-        Campaign dummyCampaign = new Campaign(
-                uuidDummyCampaign,
-                uuidDummyFundraiser,
-                "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
-                LocalDateTime.now(),
-                123123,
-                "Ini deskripsi."
-        );
-        UUID uuidNewDummyCampaign = UUID.randomUUID();
-        dummyCampaign.setCampaignId(uuidNewDummyCampaign);
-        dummyCampaign.setJudul("New Title");
-        dummyCampaign.setTarget(100);
-        dummyCampaign.setDeskripsi("New Deskripsi");
+        String newBukti = "http://new.com/proof.pdf";
+        campaign.setJudul("New Title");
+        campaign.setTarget(100);
+        campaign.setDeskripsi("New Deskripsi");
+        campaign.setBuktiPenggalanganDana(newBukti);
 
-        when(campaignRepository.save(dummyCampaign)).thenReturn(dummyCampaign);
+        when(campaignRepository.save(campaign)).thenReturn(campaign);
 
-        Campaign updatedCampaign = campaignService.updateCampaign(dummyCampaign);
+        Campaign updatedCampaign = campaignService.updateCampaign(campaign);
         assertEquals("New Title", updatedCampaign.getJudul());
         assertEquals(100, updatedCampaign.getTarget());
         assertEquals("New Deskripsi", updatedCampaign.getDeskripsi());
+        assertEquals(newBukti, updatedCampaign.getBuktiPenggalanganDana());
     }
 
     @Test
     void testDeleteCampaign() {
         campaignService.deleteCampaign(campaign.getCampaignId());
-        verify(campaignRepository).deleteByCampaignId(campaign.getCampaignId());
+        verify(campaignRepository).deleteById(campaign.getCampaignId());
+    }
+
+    @Test
+    void testGetBuktiPenggalanganDana_Found() {
+        String buktiUrl = "http://example.com/bukti.png";
+        campaign.setBuktiPenggalanganDana(buktiUrl);
+        when(campaignRepository.findById(campaign.getCampaignId())).thenReturn(Optional.of(campaign));
+
+        String result = campaignService.getBuktiPenggalanganDana(campaign.getCampaignId());
+
+        assertEquals(buktiUrl, result);
+        verify(campaignRepository).findById(campaign.getCampaignId());
+    }
+
+    @Test
+    void testGetBuktiPenggalanganDana_NullProof() {
+        campaign.setBuktiPenggalanganDana(null);
+        when(campaignRepository.findById(campaign.getCampaignId())).thenReturn(Optional.of(campaign));
+
+        String result = campaignService.getBuktiPenggalanganDana(campaign.getCampaignId());
+
+        assertNull(result);
+        verify(campaignRepository).findById(campaign.getCampaignId());
+    }
+
+    @Test
+    void testGetBuktiPenggalanganDana_NotFound() {
+        UUID randomId = UUID.randomUUID();
+        when(campaignRepository.findById(randomId)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> {
+            campaignService.getBuktiPenggalanganDana(randomId);
+        });
+        verify(campaignRepository).findById(randomId);
     }
 }

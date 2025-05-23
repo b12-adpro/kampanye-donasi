@@ -83,8 +83,11 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public void deleteCampaign(UUID campaignId) {
-        campaignRepository.deleteByCampaignId(campaignId);
+    public void deleteCampaign(UUID campaignId) {campaignRepository.deleteById(campaignId);}
+
+    @Override
+    public String getBuktiPenggalanganDana(UUID campaignId) {
+        Campaign campaign = getCampaignByIdOrThrow(campaignId);
+        return campaign.getBuktiPenggalanganDana();
     }
 }
-
