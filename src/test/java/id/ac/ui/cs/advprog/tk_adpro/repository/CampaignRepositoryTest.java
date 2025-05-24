@@ -19,6 +19,8 @@ class CampaignRepositoryTest {
     @Autowired
     CampaignRepository campaignRepository;
 
+    String sampleBukti = "http://example.com/bukti_repo.jpg";
+
     Campaign campaign = new Campaign(
             UUID.randomUUID(),
             UUID.randomUUID(),
@@ -26,7 +28,8 @@ class CampaignRepositoryTest {
             CampaignStatus.ACTIVE.getValue(),
             LocalDateTime.now(),
             123123,
-            "Ini deskripsi."
+            "Ini deskripsi.",
+            sampleBukti
     );
 
     @Test
@@ -44,12 +47,14 @@ class CampaignRepositoryTest {
         assertEquals(campaign.getDatetime(), found.getDatetime());
         assertEquals(campaign.getTarget(), found.getTarget());
         assertEquals(campaign.getDeskripsi(), found.getDeskripsi());
+        assertEquals(campaign.getBuktiPenggalanganDana(), found.getBuktiPenggalanganDana());
     }
 
     @Test
     void testSaveUpdate() {
         campaignRepository.save(campaign);
 
+        String updatedBukti = "http://updated.com/bukti.png";
         Campaign newCampaign = new Campaign(
                 campaign.getCampaignId(),
                 campaign.getFundraiserId(),
@@ -57,7 +62,8 @@ class CampaignRepositoryTest {
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
                 1000,
-                "Ini deskripsi 2."
+                "Ini deskripsi 2.",
+                updatedBukti
         );
         Campaign result = campaignRepository.save(newCampaign);
         Optional<Campaign> findOpt = campaignRepository.findById(campaign.getCampaignId());
@@ -71,6 +77,7 @@ class CampaignRepositoryTest {
         assertEquals(result.getDatetime(), findResult.getDatetime());
         assertEquals(result.getTarget(), findResult.getTarget());
         assertEquals(result.getDeskripsi(), findResult.getDeskripsi());
+        assertEquals(updatedBukti, findResult.getBuktiPenggalanganDana());
     }
 
     @Test
@@ -79,6 +86,7 @@ class CampaignRepositoryTest {
         Optional<Campaign> result = campaignRepository.findById(campaign.getCampaignId());
         assertTrue(result.isPresent());
         assertEquals(campaign.getCampaignId(), result.get().getCampaignId());
+        assertEquals(sampleBukti, result.get().getBuktiPenggalanganDana());
     }
 
     @Test
@@ -92,6 +100,7 @@ class CampaignRepositoryTest {
         campaignRepository.save(campaign);
         List<Campaign> campaignList = campaignRepository.findByFundraiserId(campaign.getFundraiserId());
         assertEquals(1, campaignList.size());
+        assertEquals(sampleBukti, campaignList.get(0).getBuktiPenggalanganDana());
     }
 
     @Test
@@ -104,32 +113,33 @@ class CampaignRepositoryTest {
     void testDeleteByCampaignId_shouldRemoveCampaign() {
         UUID uuidCampaign = UUID.randomUUID();
         UUID uuidFundraiser = UUID.randomUUID();
-        Campaign campaign = new Campaign(
+        Campaign campaignToDelete = new Campaign(
                 uuidCampaign,
                 uuidFundraiser,
                 "Donation Campaign",
                 CampaignStatus.ACTIVE.getValue(),
                 LocalDateTime.now(),
                 123123,
-                "Ini deskripsi."
+                "Ini deskripsi.",
+                null
         );
 
-        campaignRepository.save(campaign);
+        campaignRepository.save(campaignToDelete);
 
-        assertNotNull(campaignRepository.findByCampaignId(uuidCampaign));
+        Optional<Campaign> foundBefore = campaignRepository.findById(uuidCampaign);
+        assertTrue(foundBefore.isPresent());
 
-        campaignRepository.deleteByCampaignId(uuidCampaign);
-        assertNull(campaignRepository.findByCampaignId(uuidFundraiser));
+        campaignRepository.deleteById(uuidCampaign);
+
+        Optional<Campaign> foundAfter = campaignRepository.findById(uuidCampaign);
+        assertFalse(foundAfter.isPresent());
     }
-
 
     @Test
     void testDeleteByCampaignId_nonExistingId_shouldDoNothing() {
-        UUID uuidCampaign = UUID.randomUUID();
-        UUID uuidFundraiser = UUID.randomUUID();
-        int initialSize = campaignRepository.findByFundraiserId(uuidFundraiser).size();
-        campaignRepository.deleteByCampaignId(null);
-        int finalSize = campaignRepository.findByFundraiserId(uuidFundraiser).size();
-        assertEquals(initialSize, finalSize);
+        long initialCount = campaignRepository.count();
+        campaignRepository.deleteById(UUID.randomUUID());
+        long finalCount = campaignRepository.count();
+        assertEquals(initialCount, finalCount);
     }
 }

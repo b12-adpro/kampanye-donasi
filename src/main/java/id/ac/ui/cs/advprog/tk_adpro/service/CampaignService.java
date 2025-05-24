@@ -15,5 +15,5 @@ public interface CampaignService {
     List<Campaign> getCampaignByFundraiserId(UUID fundraiserId);
     Campaign updateCampaign(Campaign campaign);
     void deleteCampaign(UUID campaignId);
+    String getBuktiPenggalanganDana(UUID campaignId);
 }
-
