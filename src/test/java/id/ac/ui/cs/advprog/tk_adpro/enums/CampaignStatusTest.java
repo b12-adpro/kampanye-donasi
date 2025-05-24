@@ -6,19 +6,22 @@ import static org.junit.jupiter.api.Assertions.*;
 class CampaignStatusTest {
     @Test
     void testEnumValues() {
-        assertEquals(2, CampaignStatus.values().length);
+        assertEquals(3, CampaignStatus.values().length);
+        assertNotNull(CampaignStatus.valueOf("PENDING"));
         assertNotNull(CampaignStatus.valueOf("ACTIVE"));
         assertNotNull(CampaignStatus.valueOf("INACTIVE"));
     }
 
     @Test
     void testGetValue() {
+        assertEquals("PENDING", CampaignStatus.PENDING.getValue());
         assertEquals("ACTIVE", CampaignStatus.ACTIVE.getValue());
         assertEquals("INACTIVE", CampaignStatus.INACTIVE.getValue());
     }
 
     @Test
     void testContainsMethod_WithValidValues() {
+        assertTrue(CampaignStatus.contains("PENDING"));
         assertTrue(CampaignStatus.contains("ACTIVE"));
         assertTrue(CampaignStatus.contains("INACTIVE"));
     }
@@ -33,6 +36,7 @@ class CampaignStatusTest {
 
     @Test
     void testContainsMethod_CaseSensitivity() {
+        assertFalse(CampaignStatus.contains("pending"));
         assertFalse(CampaignStatus.contains("active"));
         assertFalse(CampaignStatus.contains("Active"));
         assertFalse(CampaignStatus.contains("inactive"));

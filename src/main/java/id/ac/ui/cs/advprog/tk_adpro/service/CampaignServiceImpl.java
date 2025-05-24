@@ -41,7 +41,7 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public Campaign createCampaign(Campaign campaign) {
-        campaign.setStatus(CampaignStatus.ACTIVE.getValue());
+        campaign.setStatus(CampaignStatus.PENDING.getValue());
         return campaignRepository.save(campaign);
     }
 
@@ -83,7 +83,9 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public void deleteCampaign(UUID campaignId) {campaignRepository.deleteById(campaignId);}
+    public void deleteCampaign(UUID campaignId) {
+        campaignRepository.deleteById(campaignId);
+    }
 
     @Override
     public String getBuktiPenggalanganDana(UUID campaignId) {

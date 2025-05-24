@@ -61,11 +61,11 @@ public class Campaign {
     }
 
     public Campaign(UUID campaignId, UUID fundraiserId, String judul, String status, LocalDateTime datetime, int target, String deskripsi) {
-        this(campaignId, fundraiserId, judul, status, datetime, target, deskripsi, null); // Set bukti ke null
+        this(campaignId, fundraiserId, judul, status, datetime, target, deskripsi, null);
     }
 
     public Campaign(UUID campaignId, UUID fundraiserId, String judul, String status, LocalDateTime datetime, int target) {
-        this(campaignId, fundraiserId, judul, status, datetime, target, null, null); // Set deskripsi & bukti ke null
+        this(campaignId, fundraiserId, judul, status, datetime, target, null, null);
     }
 
     private void validateCommonFields(UUID fundraiserId, String judul, String status, int target) {

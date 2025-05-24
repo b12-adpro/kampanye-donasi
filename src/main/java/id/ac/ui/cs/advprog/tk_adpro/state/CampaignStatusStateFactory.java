@@ -10,9 +10,10 @@ public class CampaignStatusStateFactory {
         String status = campaign.getStatus();
         if (CampaignStatus.ACTIVE.getValue().equals(status)) {
             return new ActivatedCampaignStatusState();
-        }
-        else if (CampaignStatus.INACTIVE.getValue().equals(status)) {
+        } else if (CampaignStatus.INACTIVE.getValue().equals(status)) {
             return new InactivatedCampaignStatusState();
+        } else if (CampaignStatus.PENDING.getValue().equals(status)) {
+            return new PendingCampaignStatusState();
         }
         throw new IllegalStateException("Unknown campaign status: " + status);
     }
