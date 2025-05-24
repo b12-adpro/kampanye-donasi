@@ -1,22 +1,23 @@
 package id.ac.ui.cs.advprog.tk_adpro.controller;
 
-import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
-import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
 import id.ac.ui.cs.advprog.tk_adpro.model.Campaign;
-import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
 import id.ac.ui.cs.advprog.tk_adpro.service.CampaignService;
 
-import java.time.LocalDateTime;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
+import jakarta.annotation.PostConstruct;
 
-import id.ac.ui.cs.advprog.tk_adpro.service.DonationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.util.UUID;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/campaign")
@@ -24,6 +25,43 @@ public class CampaignController {
 
     @Autowired
     private CampaignService campaignService;
+
+    private final Path rootLocation = Paths.get("uploads/campaign_proofs");
+
+    @PostConstruct
+    public void init() {
+        try {
+            Files.createDirectories(rootLocation);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not initialize storage location", e);
+        }
+    }
+
+    @PostMapping("/upload/bukti")
+    public ResponseEntity<String> handleFileUpload(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File tidak boleh kosong.");
+        }
+
+        try {
+            String originalFilename = file.getOriginalFilename();
+            String uniqueFilename = System.currentTimeMillis() + "_" + (originalFilename != null ? originalFilename.replaceAll("\\s+", "_") : "file");
+            Path destinationFile = this.rootLocation.resolve(uniqueFilename).normalize().toAbsolutePath();
+
+            Files.copy(file.getInputStream(), destinationFile, StandardCopyOption.REPLACE_EXISTING);
+
+            String fileUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/uploads/campaign_proofs/")
+                    .path(uniqueFilename)
+                    .toUriString();
+
+            return ResponseEntity.ok(fileUrl);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Gagal mengunggah file.");
+        }
+    }
 
     @PostMapping("/{fundraiserId}/campaign")
     public ResponseEntity<Campaign> verifyCampaign(@PathVariable UUID fundraiserId, @RequestBody Campaign campaign) {
@@ -61,6 +99,20 @@ public class CampaignController {
         if (campaign != null) {
             return ResponseEntity.ok(campaign);
         } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{campaignId}/bukti")
+    public ResponseEntity<String> getBuktiPenggalanganDana(@PathVariable UUID campaignId) {
+        try {
+            String bukti = campaignService.getBuktiPenggalanganDana(campaignId);
+            if (bukti != null && !bukti.isEmpty()) {
+                return ResponseEntity.ok(bukti);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }

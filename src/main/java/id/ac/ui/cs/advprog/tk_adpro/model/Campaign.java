@@ -40,13 +40,16 @@ public class Campaign {
     @Column
     private String deskripsi;
 
+    @Column()
+    private String buktiPenggalanganDana;
+
     @PrePersist
     public void ensureId() {
         if (this.campaignId == null) this.campaignId = UUID.randomUUID();
     }
 
-    public Campaign(UUID campaignId, UUID fundraiserId, String judul, String status, LocalDateTime datetime, int target, String deskripsi) {
-        validateCommonFields(campaignId, fundraiserId, judul, status, target);
+    public Campaign(UUID campaignId, UUID fundraiserId, String judul, String status, LocalDateTime datetime, int target, String deskripsi, String buktiPenggalanganDana) {
+        validateCommonFields(fundraiserId, judul, status, target);
         this.campaignId = campaignId;
         this.fundraiserId = fundraiserId;
         this.judul = judul;
@@ -54,13 +57,18 @@ public class Campaign {
         this.datetime = datetime;
         this.target = target;
         this.deskripsi = deskripsi;
+        this.buktiPenggalanganDana = buktiPenggalanganDana;
+    }
+
+    public Campaign(UUID campaignId, UUID fundraiserId, String judul, String status, LocalDateTime datetime, int target, String deskripsi) {
+        this(campaignId, fundraiserId, judul, status, datetime, target, deskripsi, null); // Set bukti ke null
     }
 
     public Campaign(UUID campaignId, UUID fundraiserId, String judul, String status, LocalDateTime datetime, int target) {
-        this(campaignId, fundraiserId, judul, status, datetime, target, null);
+        this(campaignId, fundraiserId, judul, status, datetime, target, null, null); // Set deskripsi & bukti ke null
     }
 
-    private void validateCommonFields(UUID campaignId, UUID fundraiserId, String judul, String status, int target) {
+    private void validateCommonFields(UUID fundraiserId, String judul, String status, int target) {
         if (fundraiserId == null) {
             throw new IllegalArgumentException("Fundraiser Id must not be null!");
         }
