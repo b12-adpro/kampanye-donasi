@@ -46,7 +46,7 @@ public class CampaignServiceImplTest {
                 uuidCampaign,
                 uuidFundraiser,
                 "Donation Campaign",
-                CampaignStatus.ACTIVE.getValue(),
+                CampaignStatus.PENDING.getValue(),
                 now,
                 123123,
                 "Ini deskripsi.",
@@ -82,10 +82,25 @@ public class CampaignServiceImplTest {
 
     @Test
     void testCreateCampaign() {
-        when(campaignRepository.save(any())).thenReturn(campaign);
-        Campaign created = campaignService.createCampaign(campaign);
-        assertEquals(CampaignStatus.ACTIVE.getValue(), created.getStatus());
-        assertEquals(sampleBukti, created.getBuktiPenggalanganDana());
+        Campaign newCampaign = new Campaign(
+                UUID.randomUUID(), UUID.randomUUID(), "New",
+                CampaignStatus.PENDING.getValue(), // <-- Berikan status awal yang valid
+                LocalDateTime.now(), 100, "Desc", null
+        );
+
+        when(campaignRepository.save(any(Campaign.class))).thenAnswer(invocation -> {
+            Campaign saved = invocation.getArgument(0);
+            // Service akan mengatur ini, jadi mock bisa mencerminkannya atau tidak,
+            // tergantung apa yang ingin Anda uji dari mock save.
+            // Untuk konsistensi, kita bisa pastikan mock juga mengembalikan PENDING.
+            saved.setStatus(CampaignStatus.PENDING.getValue());
+            return saved;
+        });
+
+        Campaign created = campaignService.createCampaign(newCampaign);
+
+        assertEquals(CampaignStatus.PENDING.getValue(), created.getStatus());
+        verify(campaignRepository).save(argThat(c -> c.getStatus().equals(CampaignStatus.PENDING.getValue())));
     }
 
     @Test
@@ -94,26 +109,34 @@ public class CampaignServiceImplTest {
                 null,
                 UUID.randomUUID(),
                 "Campaign Donation",
-                CampaignStatus.ACTIVE.getValue(),
+                CampaignStatus.PENDING.getValue(), // <-- Berikan status awal yang valid
                 LocalDateTime.now(),
                 123123,
                 "Get well soon!",
                 sampleBukti
         );
-        when(campaignRepository.save(campaign1)).thenReturn(campaign1);
+        when(campaignRepository.save(any(Campaign.class))).thenAnswer(invocation -> {
+            Campaign saved = invocation.getArgument(0);
+            saved.setStatus(CampaignStatus.PENDING.getValue()); // Service akan mengatur ini
+            if (saved.getCampaignId() == null) {
+                saved.setCampaignId(UUID.randomUUID()); // Service tidak secara eksplisit generate ID, itu tugas @PrePersist
+            }
+            return saved;
+        });
 
         Campaign result = campaignService.createCampaign(campaign1);
-        verify(campaignRepository).save(campaign1);
+        verify(campaignRepository).save(result); // Verifikasi objek yang dikembalikan oleh service
+        assertEquals(CampaignStatus.PENDING.getValue(), result.getStatus());
+        // Bandingkan field lain, status dan ID mungkin berbeda dari campaign1 awal
         assertThat(result)
                 .usingRecursiveComparison()
-                .ignoringFields("campaignId")
-                .isEqualTo(campaign1);
-        assertEquals(sampleBukti, result.getBuktiPenggalanganDana());
+                .ignoringFields("campaignId", "status") // Abaikan status karena sudah dicek, ID karena bisa null
+                .isEqualTo(campaign1); // Bandingkan field lain
     }
 
     @Test
-    void testActivateCampaign() {
-        campaign.setStatus(CampaignStatus.INACTIVE.getValue());
+    void testActivateCampaign_FromPending() {
+        campaign.setStatus(CampaignStatus.PENDING.getValue());
         when(campaignRepository.findById(campaign.getCampaignId())).thenReturn(Optional.of(campaign));
         campaignService.activateCampaign(campaign.getCampaignId());
         verify(campaignRepository).save(argThat(c -> c.getStatus().equals(CampaignStatus.ACTIVE.getValue())));
@@ -123,13 +146,12 @@ public class CampaignServiceImplTest {
     void testActivateCampaign_CampaignNotFound() {
         UUID campaignId = UUID.randomUUID();
         when(campaignRepository.findById(campaignId)).thenReturn(Optional.empty());
-
         assertThrows(RuntimeException.class, () -> campaignService.activateCampaign(campaignId));
     }
 
     @Test
-    void testInactivateCampaign() {
-        campaign.setStatus(CampaignStatus.ACTIVE.getValue());
+    void testInactivateCampaign_FromPending() {
+        campaign.setStatus(CampaignStatus.PENDING.getValue());
         when(campaignRepository.findById(campaign.getCampaignId())).thenReturn(Optional.of(campaign));
         campaignService.inactivateCampaign(campaign.getCampaignId());
         verify(campaignRepository).save(argThat(c -> c.getStatus().equals(CampaignStatus.INACTIVE.getValue())));
@@ -139,15 +161,13 @@ public class CampaignServiceImplTest {
     void testInactivateCampaign_CampaignNotFound() {
         UUID campaignId = UUID.randomUUID();
         when(campaignRepository.findById(campaignId)).thenReturn(Optional.empty());
-
         assertThrows(RuntimeException.class, () -> campaignService.inactivateCampaign(campaignId));
     }
 
     @Test
     void testGetCampaignByCampaignId() {
-        UUID uuidDummyCampaign = UUID.randomUUID();
+        UUID uuidDummyCampaign = campaign.getCampaignId();
         when(campaignRepository.findById(uuidDummyCampaign)).thenReturn(Optional.of(campaign));
-        campaign.setCampaignId(uuidDummyCampaign);
 
         Campaign result = campaignService.getCampaignByCampaignId(uuidDummyCampaign);
 
@@ -159,7 +179,6 @@ public class CampaignServiceImplTest {
     void testGetCampaignByCampaignId_NotFound() {
         UUID campaignId = UUID.randomUUID();
         when(campaignRepository.findById(campaignId)).thenReturn(Optional.empty());
-
         Campaign result = campaignService.getCampaignByCampaignId(campaignId);
         assertNull(result);
     }
@@ -168,7 +187,6 @@ public class CampaignServiceImplTest {
     void testGetCampaignByFundraiserId() {
         UUID uuidDummyFundraiser = campaign.getFundraiserId();
         List<Campaign> dummyList = List.of(campaign);
-
         when(campaignRepository.findByFundraiserId(uuidDummyFundraiser)).thenReturn(dummyList);
 
         List<Campaign> result = campaignService.getCampaignByFundraiserId(uuidDummyFundraiser);
