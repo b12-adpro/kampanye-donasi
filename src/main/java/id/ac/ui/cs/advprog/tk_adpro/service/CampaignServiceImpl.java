@@ -92,4 +92,9 @@ public class CampaignServiceImpl implements CampaignService {
         Campaign campaign = getCampaignByIdOrThrow(campaignId);
         return campaign.getBuktiPenggalanganDana();
     }
+
+    @Override
+    public List<Campaign> getAllCampaigns() {
+        return campaignRepository.findAll();
+    }
 }
