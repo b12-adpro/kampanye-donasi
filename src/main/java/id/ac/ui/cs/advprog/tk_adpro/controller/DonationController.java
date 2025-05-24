@@ -1,10 +1,12 @@
 package id.ac.ui.cs.advprog.tk_adpro.controller;
 
+import id.ac.ui.cs.advprog.tk_adpro.dto.DonationDTO;
 import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
 import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
 import id.ac.ui.cs.advprog.tk_adpro.service.DonationService;
 import id.ac.ui.cs.advprog.tk_adpro.exception.InsufficientBalanceException;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,22 +20,64 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/donations")
+@CrossOrigin(origins = "http://localhost:3000")
 public class DonationController {
     @Autowired
     private DonationService donationService;
 
-    @PostMapping("/campaigns/{campaignId}")
-    public ResponseEntity<Object> createDonation(@PathVariable UUID campaignId, @RequestBody Donation donation) {
+    @PostMapping("/campaigns")
+    public ResponseEntity<Object> createDonation(
+            @RequestBody @Valid DonationDTO donationRequest
+    ) {
         try {
-            donation.setCampaignId(campaignId);
-            if (donation.getDatetime() == null) donation.setDatetime(LocalDateTime.now());
+            // Buat instance Donation dari DTO
+            Donation newDonation = new Donation(
+                null,
+                donationRequest.getCampaignId(),
+                donationRequest.getDonaturId(),
+                donationRequest.getAmount(),
+                donationRequest.get
+            );
 
-            donationService.checkBalance(donation);
-            Donation createdDonation = donationService.createDonation(donation);
+            // 1. Set campaignId dari @PathVariable (sumber kebenaran)
+            newDonation.setCampaignId(campaignId);
+
+            // 2. Set field lain dari DTO
+            newDonation.set
+            newDonation.setDonaturId(donationRequest.getDonaturId());
+            newDonation.setAmount(donationRequest.getAmount());
+            newDonation.setMessage(donationRequest.getMessage());
+
+            // 3. Handle datetime
+            // Jika klien mengirim datetime, gunakan itu. Jika tidak, set ke waktu sekarang.
+            if (donationRequest.getDatetime() != null) {
+                newDonation.setDatetime(donationRequest.getDatetime());
+            } else {
+                newDonation.setDatetime(LocalDateTime.now());
+            }
+
+            // 4. Set status donasi (tidak ada di DTO, di-set oleh server)
+            newDonation.setStatus("PENDING"); // Asumsi Donation memiliki setStatus() dan field status
+
+            // donationId akan di-generate oleh @PrePersist saat entitas disimpan.
+            // Pastikan kelas Donation Anda memiliki setter yang sesuai.
+
+            Donation createdDonation = donationService.createDonation(newDonation);
             return new ResponseEntity<>(createdDonation, HttpStatus.CREATED);
+
         } catch (InsufficientBalanceException e) {
             return badRequest(e.getMessage());
-        } catch (Exception e) {
+        } /* catch (MethodArgumentNotValidException e) { // Jika menggunakan @Valid dan validasi gagal
+            // Handle validation errors, misalnya:
+            // Map<String, String> errors = new HashMap<>();
+            // e.getBindingResult().getAllErrors().forEach((error) -> {
+            //     String fieldName = ((FieldError) error).getField();
+            //     String errorMessage = error.getDefaultMessage();
+            //     errors.put(fieldName, errorMessage);
+            // });
+            // return ResponseEntity.badRequest().body(errors);
+        } */ catch (Exception e) {
+            // log.error("Error creating donation: ", e); // Sebaiknya log error
             return serverError("Failed to create donation: " + e.getMessage());
         }
     }
