@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.hasSize;
 
 @WebMvcTest(CampaignController.class)
 public class CampaignControllerTest {
@@ -204,5 +206,30 @@ public class CampaignControllerTest {
         mockMvc.perform(delete("/api/campaign/{campaignId}/delete", campaignId))
                 .andExpect(status().isOk());
         verify(campaignService).deleteCampaign(campaignId);
+    }
+
+    @Test
+    void testGetAllCampaigns_Success() throws Exception {
+        List<Campaign> allCampaigns = Arrays.asList(campaignWithBukti, campaignWithoutBukti);
+        when(campaignService.getAllCampaigns()).thenReturn(allCampaigns);
+
+        mockMvc.perform(get("/api/campaign/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].judul").value(campaignWithBukti.getJudul()))
+                .andExpect(jsonPath("$[1].judul").value(campaignWithoutBukti.getJudul()));
+
+        verify(campaignService).getAllCampaigns();
+    }
+
+    @Test
+    void testGetAllCampaigns_Empty() throws Exception {
+        when(campaignService.getAllCampaigns()).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(get("/api/campaign/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+
+        verify(campaignService).getAllCampaigns();
     }
 }

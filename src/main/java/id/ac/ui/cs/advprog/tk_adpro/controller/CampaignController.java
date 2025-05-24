@@ -128,4 +128,10 @@ public class CampaignController {
         campaignService.deleteCampaign(campaignId);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<Campaign>> getAllCampaigns() {
+        List<Campaign> campaigns = campaignService.getAllCampaigns();
+        return ResponseEntity.ok(campaigns);
+    }
 }

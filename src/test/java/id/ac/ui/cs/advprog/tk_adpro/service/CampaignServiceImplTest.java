@@ -13,9 +13,8 @@ import id.ac.ui.cs.advprog.tk_adpro.repository.CampaignRepository;
 import id.ac.ui.cs.advprog.tk_adpro.strategy.WithdrawStrategy;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.Optional;
+import java.util.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -35,22 +34,34 @@ public class CampaignServiceImplTest {
     private CampaignServiceImpl campaignService;
 
     private Campaign campaign;
+    private Campaign campaign2;
     private final String sampleBukti = "http://example.com/bukti.jpg";
 
     @BeforeEach
     void setUp() {
         LocalDateTime now = LocalDateTime.now();
-        UUID uuidCampaign = UUID.randomUUID();
+        UUID uuidCampaign1 = UUID.randomUUID();
+        UUID uuidCampaign2 = UUID.randomUUID();
         UUID uuidFundraiser = UUID.randomUUID();
         campaign = new Campaign(
-                uuidCampaign,
+                uuidCampaign1,
                 uuidFundraiser,
-                "Donation Campaign",
+                "Donation Campaign 1",
                 CampaignStatus.PENDING.getValue(),
                 now,
                 123123,
-                "Ini deskripsi.",
+                "Ini deskripsi 1.",
                 sampleBukti
+        );
+        campaign2 = new Campaign(
+                uuidCampaign2,
+                uuidFundraiser,
+                "Donation Campaign 2",
+                CampaignStatus.ACTIVE.getValue(),
+                now.plusDays(1),
+                200000,
+                "Ini deskripsi 2.",
+                null
         );
     }
 
@@ -251,5 +262,27 @@ public class CampaignServiceImplTest {
             campaignService.getBuktiPenggalanganDana(randomId);
         });
         verify(campaignRepository).findById(randomId);
+    }
+
+    @Test
+    void testGetAllCampaigns() {
+        List<Campaign> expectedCampaigns = Arrays.asList(campaign, campaign2);
+        when(campaignRepository.findAll()).thenReturn(expectedCampaigns);
+
+        List<Campaign> actualCampaigns = campaignService.getAllCampaigns();
+
+        assertEquals(expectedCampaigns.size(), actualCampaigns.size());
+        assertEquals(expectedCampaigns, actualCampaigns);
+        verify(campaignRepository).findAll();
+    }
+
+    @Test
+    void testGetAllCampaigns_Empty() {
+        when(campaignRepository.findAll()).thenReturn(new ArrayList<>());
+
+        List<Campaign> actualCampaigns = campaignService.getAllCampaigns();
+
+        assertTrue(actualCampaigns.isEmpty());
+        verify(campaignRepository).findAll();
     }
 }
