@@ -3,45 +3,45 @@ package id.ac.ui.cs.advprog.tk_adpro.repository;
 import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
 import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
-import java.time.LocalDateTime;
 import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class DonationRepositoryTest {
-    DonationRepository donationRepository;
-    Donation donation;
+    @Autowired
+    private DonationRepository donationRepository;
 
-    UUID donationId = UUID.fromString("13652556-012a-4c07-b546-54eb1396d79b");
-    UUID campaignId = UUID.fromString("eb558e9f-1c39-460e-8860-71af6af63bd6");
-    UUID donaturId = UUID.randomUUID();
-
-    @BeforeEach
-    void setUp() {
-        donationRepository = new DonationRepository();
-        donation = new Donation(
-            donationId,
-            campaignId,
-            donaturId,
+    private static final Donation donation = new Donation(
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             169500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
-    }
 
     @Test
     void testSaveCreate() {
-        Donation result = donationRepository.save(donation);
-        assertEquals(donation.getDonationId(), result.getDonationId());
-        assertEquals(donation.getCampaignId(), result.getCampaignId());
-        assertEquals(donation.getAmount(), result.getAmount());
-        assertEquals(donation.getDatetime(), result.getDatetime());
-        assertEquals(donation.getMessage(), result.getMessage());
+        Donation saved = donationRepository.save(donation);
+        assertNotNull(saved.getDonationId());
+
+        Optional<Donation> foundOpt = donationRepository.findById(saved.getDonationId());
+        assertTrue(foundOpt.isPresent());
+
+        Donation found = foundOpt.get();
+        assertEquals(donation.getCampaignId(), found.getCampaignId());
+        assertEquals(donation.getAmount(), found.getAmount());
+        assertEquals(donation.getDatetime(), found.getDatetime());
+        assertEquals(donation.getMessage(), found.getMessage());
     }
 
     @Test
@@ -59,7 +59,10 @@ class DonationRepositoryTest {
         );
         Donation result = donationRepository.save(newDonation);
 
-        Donation findResult = donationRepository.findByDonationId(donation.getDonationId());
+        Optional<Donation> findOpt = donationRepository.findById(donation.getDonationId());
+        assertTrue(findOpt.isPresent());
+
+        Donation findResult = findOpt.get();
         assertEquals(result.getDonationId(), findResult.getDonationId());
         assertEquals(result.getCampaignId(), findResult.getCampaignId());
         assertEquals(result.getAmount(), findResult.getAmount());
@@ -70,15 +73,15 @@ class DonationRepositoryTest {
     @Test
     void testFindByDonationIdIfDonationIdFound() {
         donationRepository.save(donation);
-        Donation result = donationRepository.findByDonationId(donation.getDonationId());
-        assertNotNull(result);
-        assertEquals(donation.getDonationId(), result.getDonationId());
+        Optional<Donation> result = donationRepository.findById(donation.getDonationId());
+        assertTrue(result.isPresent());
+        assertEquals(donation.getDonationId(), result.get().getDonationId());
     }
 
     @Test
     void testFindByIdDonationIfDonationIdNotFound() {
-        Donation result = donationRepository.findByDonationId(UUID.randomUUID());
-        assertNull(result);
+        Optional<Donation> result = donationRepository.findById(UUID.randomUUID());
+        assertFalse(result.isPresent());
     }
 
     @Test
@@ -133,8 +136,13 @@ class DonationRepositoryTest {
         );
         donationRepository.save(updated);
 
-        Donation first = donationRepository.findByDonationId(other.getDonationId());
-        Donation second = donationRepository.findByDonationId(donation.getDonationId());
+        Optional<Donation> firstOpt = donationRepository.findById(other.getDonationId());
+        Optional<Donation> secondOpt = donationRepository.findById(donation.getDonationId());
+        assertTrue(firstOpt.isPresent());
+        assertTrue(secondOpt.isPresent());
+
+        Donation first = firstOpt.get();
+        Donation second = secondOpt.get();
         assertEquals(1000, first.getAmount());
         assertEquals(555, second.getAmount());
         assertEquals("Updated", second.getMessage());
@@ -188,23 +196,23 @@ class DonationRepositoryTest {
         Donation d2 = new Donation(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 20, DonationStatus.PENDING.getValue(), LocalDateTime.now(), "B");
         Donation saved2 = donationRepository.save(d2);
 
-        Donation foundA = donationRepository.findByDonationId(saved1.getDonationId());
-        Donation foundB = donationRepository.findByDonationId(saved2.getDonationId());
-        assertNotNull(foundA);
-        assertNotNull(foundB);
+        Optional<Donation> foundAOpt = donationRepository.findById(saved1.getDonationId()); // [UPDATED]
+        Optional<Donation> foundBOpt = donationRepository.findById(saved2.getDonationId()); // [UPDATED]
+        assertTrue(foundAOpt.isPresent());
+        assertTrue(foundBOpt.isPresent());
+
+        Donation foundA = foundAOpt.get();
+        Donation foundB = foundBOpt.get();
         assertEquals("A", foundA.getMessage());
         assertEquals(20, foundB.getAmount());
     }
 
     @Test
     void testSaveWithoutDonationId() {
-        UUID campId = UUID.randomUUID();
-        UUID newDonaturId = UUID.randomUUID();
-
         Donation newDonation = new Donation(
             null,
-            campId,
-            newDonaturId,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
             500,
             DonationStatus.PENDING.getValue(),
             LocalDateTime.now()
@@ -213,9 +221,11 @@ class DonationRepositoryTest {
         Donation result = donationRepository.save(newDonation);
         assertNotNull(result.getDonationId());
 
-        Donation found = donationRepository.findByDonationId(result.getDonationId());
-        assertNotNull(found);
+        Optional<Donation> foundOpt = donationRepository.findById(result.getDonationId());
+        assertTrue(foundOpt.isPresent());
+
+        Donation found = foundOpt.get();
         assertEquals(500, found.getAmount());
-        assertEquals(1, donationRepository.findByCampaignId(campId).size());
+        assertEquals(1, donationRepository.findByCampaignId(newDonation.getCampaignId()).size());
     }
 }

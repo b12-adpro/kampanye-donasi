@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,8 +26,8 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 class PaymentServiceApiStrategyTest {
-    private RestTemplate restTemplate;
-    private PaymentStrategy paymentStrategy;
+    private static RestTemplate restTemplate;
+    private static PaymentStrategy paymentStrategy;
 
     @BeforeEach
     void setUp() {
@@ -154,12 +156,12 @@ class PaymentServiceApiStrategyTest {
     }
 
     @Test
-    void testProcessPaymentSuccess() {
+    void testProcessPaymentSuccess() throws InterruptedException {
         UUID donaturId = UUID.randomUUID();
         int amount = 50;
+
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("success", true);
-
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(
@@ -169,17 +171,28 @@ class PaymentServiceApiStrategyTest {
             eq(Map.class)
         )).thenReturn(responseEntity);
 
-        boolean result = paymentStrategy.processPayment(donaturId, amount);
-        assertTrue(result);
+        // Jalankan metode asinkron
+        paymentStrategy.processPayment(donaturId, amount);
+
+        // Tunggu sejenak agar thread async sempat jalan
+        Thread.sleep(500);  // bisa diganti lebih pendek atau lebih panjang sesuai keperluan
+
+        // Verifikasi metode exchange() dipanggil sekali
+        verify(restTemplate, times(1)).exchange(
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
+        );
     }
 
     @Test
-    void testProcessPaymentDeclined() {
+    void testProcessPaymentDeclined() throws InterruptedException {
         UUID donaturId = UUID.randomUUID();
         int amount = 50;
+
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("success", false);
-
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
         when(restTemplate.exchange(
@@ -189,8 +202,19 @@ class PaymentServiceApiStrategyTest {
             eq(Map.class)
         )).thenReturn(responseEntity);
 
-        boolean result = paymentStrategy.processPayment(donaturId, amount);
-        assertFalse(result);
+        // Jalankan metode asinkron
+        paymentStrategy.processPayment(donaturId, amount);
+
+        // Tunggu sejenak agar thread async sempat jalan
+        Thread.sleep(500);
+
+        // Verifikasi metode exchange() dipanggil
+        verify(restTemplate, times(1)).exchange(
+            eq("http://dummy-payment-service.com/api/processPayment"),
+            eq(HttpMethod.POST),
+            any(HttpEntity.class),
+            eq(Map.class)
+        );
     }
 
     @Test
@@ -209,10 +233,11 @@ class PaymentServiceApiStrategyTest {
             eq(Map.class)
         )).thenReturn(responseEntity);
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.processPayment(donaturId, amount)
-        );
-        assertTrue(exception.getMessage().contains("Invalid response format"));
+        CompletableFuture<Void> future = paymentStrategy.processPayment(donaturId, amount);
+        ExecutionException exception = assertThrows(ExecutionException.class, future::get);
+
+        assertInstanceOf(PaymentServiceException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("Invalid response format"));
     }
 
     @Test
@@ -227,10 +252,11 @@ class PaymentServiceApiStrategyTest {
             eq(Map.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request"));
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.processPayment(donaturId, amount)
-        );
-        assertTrue(exception.getMessage().contains("Payment service returned an error"));
+        CompletableFuture<Void> future = paymentStrategy.processPayment(donaturId, amount);
+        ExecutionException exception = assertThrows(ExecutionException.class, future::get);
+
+        assertInstanceOf(PaymentServiceException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("Payment service returned an error"));
     }
 
     @Test
@@ -245,10 +271,11 @@ class PaymentServiceApiStrategyTest {
             eq(Map.class)
         )).thenThrow(new ResourceAccessException("Connection refused"));
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.processPayment(donaturId, amount)
-        );
-        assertTrue(exception.getMessage().contains("Cannot connect to payment service"));
+        CompletableFuture<Void> future = paymentStrategy.processPayment(donaturId, amount);
+        ExecutionException exception = assertThrows(ExecutionException.class, future::get);
+
+        assertInstanceOf(PaymentServiceException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("Cannot connect to payment service"));
     }
 
     @Test
@@ -267,10 +294,11 @@ class PaymentServiceApiStrategyTest {
             eq(Map.class)
         )).thenReturn(responseEntity);
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.processPayment(donaturId, amount)
-        );
-        assertTrue(exception.getMessage().contains("Status: 503 SERVICE_UNAVAILABLE"));
+        CompletableFuture<Void> future = paymentStrategy.processPayment(donaturId, amount);
+        ExecutionException exception = assertThrows(ExecutionException.class, future::get);
+
+        assertInstanceOf(PaymentServiceException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("Status: 503 SERVICE_UNAVAILABLE"));
     }
 
     @Test
@@ -287,9 +315,10 @@ class PaymentServiceApiStrategyTest {
             eq(Map.class)
         )).thenReturn(responseEntity);
 
-        PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.processPayment(donaturId, amount)
-        );
-        assertTrue(exception.getMessage().contains("Failed to process payment. Status"));
+        CompletableFuture<Void> future = paymentStrategy.processPayment(donaturId, amount);
+        ExecutionException exception = assertThrows(ExecutionException.class, future::get);
+
+        assertInstanceOf(PaymentServiceException.class, exception.getCause());
+        assertTrue(exception.getCause().getMessage().contains("Failed to process payment. Status"));
     }
 }
