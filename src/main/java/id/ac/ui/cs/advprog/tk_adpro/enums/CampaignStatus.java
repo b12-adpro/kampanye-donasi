@@ -3,6 +3,7 @@ import lombok.Getter;
 
 @Getter
 public enum CampaignStatus {
+    PENDING("PENDING"),
     ACTIVE("ACTIVE"),
     INACTIVE("INACTIVE");
 
