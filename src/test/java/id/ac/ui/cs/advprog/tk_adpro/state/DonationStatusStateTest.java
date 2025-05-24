@@ -42,6 +42,16 @@ class DonationStatusStateTest {
     }
 
     @Test
+    void pendingDonation_cannotBePendingAgain() {
+        baseDonation.setStatus(DonationStatus.PENDING.getValue());
+        DonationStatusState state = new PendingDonationStatusState();
+
+        assertThatThrownBy(() -> state.pending(baseDonation))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("already pending");
+    }
+
+    @Test
     void canceledDonation_cannotBeCanceledAgain() {
         baseDonation.setStatus(DonationStatus.CANCELED.getValue());
         DonationStatusState state = new CanceledDonationStatusState();
@@ -62,6 +72,16 @@ class DonationStatusStateTest {
     }
 
     @Test
+    void canceledDonation_cannotBePending() {
+        baseDonation.setStatus(DonationStatus.CANCELED.getValue());
+        DonationStatusState state = new CanceledDonationStatusState();
+
+        assertThatThrownBy(() -> state.pending(baseDonation))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("cannot be pending");
+    }
+
+    @Test
     void completedDonation_cannotBeCanceled() {
         baseDonation.setStatus(DonationStatus.COMPLETED.getValue());
         DonationStatusState state = new CompletedDonationStatusState();
@@ -79,6 +99,13 @@ class DonationStatusStateTest {
         assertThatThrownBy(() -> state.complete(baseDonation))
             .isInstanceOf(IllegalStateException.class)
             .hasMessageContaining("already completed");
+    }
+
+    @Test
+    void completeDonation_canBePending() {
+        DonationStatusState state = new CompletedDonationStatusState();
+        state.pending(baseDonation);
+        assertThat(baseDonation.getStatus()).isEqualTo(DonationStatus.PENDING.getValue());
     }
 
     @Test
