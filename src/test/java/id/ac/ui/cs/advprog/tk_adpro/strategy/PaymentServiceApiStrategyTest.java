@@ -14,21 +14,30 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+@TestPropertySource(properties = {
+    "payment.service.check-balance-url=http://dummy-payment-service.com/api/wallet",
+    "payment.service.process-payment-url=http://dummy-payment-service.com/api/wallet/donate"
+})
 class PaymentServiceApiStrategyTest {
     private static RestTemplate restTemplate;
     private static PaymentStrategy paymentStrategy;
 
-    private static final String CHECK_BALANCE_URL = "http://dummy-payment-service.com/api/wallet";
-    private static final String PROCESS_PAYMENT_URL = "http://dummy-payment-service.com/api/wallet/donate";
+    @Value("${payment.service.check-balance-url}")
+    private static String CHECK_BALANCE_URL;
+
+    @Value("${payment.service.process-payment-url}")
+    private static String PROCESS_PAYMENT_URL;
 
     @BeforeEach
     void setUp() {

@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.tk_adpro.strategy;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -28,9 +29,14 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 @Service
 public class PaymentServiceApiStrategy implements PaymentStrategy {
     private static final Logger logger = LoggerFactory.getLogger(PaymentServiceApiStrategy.class);
-    private static final String CHECK_BALANCE_URL = "http://dummy-payment-service.com/api/wallet";
-    private static final String PROCESS_PAYMENT_URL = "http://dummy-payment-service.com/api/wallet/donate";
     private final RestTemplate restTemplate;
+
+    @Value("${payment.service.check-balance-url}")
+    private String CHECK_BALANCE_URL;
+
+    @Value("${payment.service.process-payment-url}")
+    private String PROCESS_PAYMENT_URL;
+
 
     @Autowired
     public PaymentServiceApiStrategy(RestTemplateBuilder restTemplateBuilder) {
