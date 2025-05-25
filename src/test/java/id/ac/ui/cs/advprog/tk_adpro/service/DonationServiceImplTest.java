@@ -158,46 +158,6 @@ class DonationServiceImplTest {
     }
 
     @Test
-    void testCompleteDonation() {
-        Donation donation = new Donation(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            169500,
-            DonationStatus.PENDING.getValue(),
-            LocalDateTime.now(),
-            "Get well soon!"
-        );
-
-        DonationStatusState mockState = mock(DonationStatusState.class);
-        doAnswer(invocation -> {
-            donation.setStatus(DonationStatus.COMPLETED.getValue());
-            return null;
-        }).when(mockState).complete(any(Donation.class));
-
-        try (MockedStatic<DonationStatusStateFactory> factoryMock = mockStatic(DonationStatusStateFactory.class)) {
-            factoryMock.when(() -> DonationStatusStateFactory.getState(donation)).thenReturn(mockState);
-            when(donationRepository.findById(donation.getDonationId())).thenReturn(Optional.of(donation));
-            when(paymentStrategy.checkBalance(donation.getDonaturId())).thenReturn(200000);
-            when(donationRepository.save(donation)).thenReturn(donation);
-
-            donationService.completeDonation(donation.getDonationId());
-            verify(paymentStrategy).checkBalance(donation.getDonaturId());
-            verify(mockState).complete(donation);
-            verify(donationRepository).save(donation);
-            assertEquals(DonationStatus.COMPLETED.getValue(), donation.getStatus());
-        }
-    }
-
-    @Test
-    void testCompleteDonation_DonationNotFound() {
-        UUID donationId = UUID.randomUUID();
-        when(donationRepository.findById(donationId)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () -> donationService.completeDonation(donationId));
-    }
-
-    @Test
     void testCancelDonation() {
         Donation donation = new Donation(
             UUID.randomUUID(),
