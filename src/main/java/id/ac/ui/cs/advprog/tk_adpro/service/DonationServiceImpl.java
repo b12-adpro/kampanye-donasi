@@ -5,6 +5,7 @@ import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
 import id.ac.ui.cs.advprog.tk_adpro.repository.DonationRepository;
 import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusState;
 import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusStateFactory;
+import id.ac.ui.cs.advprog.tk_adpro.strategy.PaymentServiceApiStrategy;
 import id.ac.ui.cs.advprog.tk_adpro.strategy.PaymentStrategy;
 import id.ac.ui.cs.advprog.tk_adpro.exception.InsufficientBalanceException;
 
@@ -38,7 +39,12 @@ public class DonationServiceImpl implements DonationService {
         if (donation.getStatus().equals(DonationStatus.COMPLETED.getValue())) {
             try {
                 checkBalance(donation);
-                paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount());
+                paymentStrategy.processPayment(
+                    donation.getDonationId(),
+                    donation.getCampaignId(),
+                    donation.getDonaturId(),
+                    donation.getAmount()
+                );
                 //TODO: Notify Campaign
             } catch (InsufficientBalanceException e) {
                 DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
@@ -46,15 +52,6 @@ public class DonationServiceImpl implements DonationService {
             }
         }
         return donationRepository.save(donation);
-    }
-
-    @Override
-    @Transactional
-    public Donation completeDonation(UUID donationId) {
-        Donation donation = getDonationByIdOrThrow(donationId);
-        DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
-        currentState.complete(donation);
-        return createDonation(donation);
     }
 
     @Override
@@ -84,7 +81,7 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     public List<Donation> getDonationsByCampaignId(UUID campaignId) {
-        return donationRepository.findByCampaignId(campaignId);
+        return donationRepository.findByCampaignIdAndStatusNamed(campaignId, DonationStatus.COMPLETED.getValue());
     }
 
     @Override
@@ -92,14 +89,6 @@ public class DonationServiceImpl implements DonationService {
     public Donation updateDonationMessage(UUID donationId, String newMessage) {
         Donation donation = getDonationByIdOrThrow(donationId);
         donation.setMessage(newMessage);
-        return donationRepository.save(donation);
-    }
-
-    @Override
-    @Transactional
-    public Donation deleteDonationMessage(UUID donationId) {
-        Donation donation = getDonationByIdOrThrow(donationId);
-        donation.setMessage(null);
         return donationRepository.save(donation);
     }
 }

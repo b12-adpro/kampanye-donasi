@@ -4,6 +4,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.UUID;
 
 public interface PaymentStrategy {
-    int checkBalance(UUID donaturId);
-    CompletableFuture<Void> processPayment(UUID donaturId, int amount);
+    double checkBalance(UUID donaturId);
+    CompletableFuture<Void> processPayment(UUID donationId, UUID campaignId, UUID donaturId, int amount);
 }
