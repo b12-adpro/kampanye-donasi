@@ -45,6 +45,11 @@ jobs:
 
             docker run -d \
               --name=web_server \
+              --network kampanye-network \
               -p 8080:8080 \
-              -e ENV1="insert env var anda disini jika perlu" \
+              --restart unless-stopped \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              -e DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }} \
+              -e DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
+              -e DATABASE_DRIVER_CLASSNAME=${{ secrets.DATABASE_DRIVER_CLASSNAME }} \
               ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_REPO_NAME }}:latest
