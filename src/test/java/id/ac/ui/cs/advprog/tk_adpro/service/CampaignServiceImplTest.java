@@ -209,19 +209,42 @@ public class CampaignServiceImplTest {
 
     @Test
     void testUpdateCampaign() {
-        String newBukti = "http://new.com/proof.pdf";
-        campaign.setJudul("New Title");
-        campaign.setTarget(100);
-        campaign.setDeskripsi("New Deskripsi");
-        campaign.setBuktiPenggalanganDana(newBukti);
+        UUID campaignId = UUID.randomUUID();
 
-        when(campaignRepository.save(campaign)).thenReturn(campaign);
+        Campaign existingCampaign = new Campaign();
+        existingCampaign.setCampaignId(campaignId);
+        existingCampaign.setJudul("Old Title");
+        existingCampaign.setTarget(50);
+        existingCampaign.setDeskripsi("Old Description");
+        existingCampaign.setBuktiPenggalanganDana("http://old.com/proof.pdf");
 
-        Campaign updatedCampaign = campaignService.updateCampaign(campaign);
-        assertEquals("New Title", updatedCampaign.getJudul());
-        assertEquals(100, updatedCampaign.getTarget());
-        assertEquals("New Deskripsi", updatedCampaign.getDeskripsi());
-        assertEquals(newBukti, updatedCampaign.getBuktiPenggalanganDana());
+        Campaign updatedCampaignData = new Campaign();
+        updatedCampaignData.setJudul("New Title");
+        updatedCampaignData.setTarget(100);
+        updatedCampaignData.setDeskripsi("New Description");
+        updatedCampaignData.setBuktiPenggalanganDana("http://new.com/proof.pdf");
+
+        Campaign expectedResult = new Campaign();
+        expectedResult.setCampaignId(campaignId);
+        expectedResult.setJudul("New Title");
+        expectedResult.setTarget(100);
+        expectedResult.setDeskripsi("New Description");
+        expectedResult.setBuktiPenggalanganDana("http://new.com/proof.pdf");
+
+        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(existingCampaign));
+        when(campaignRepository.save(any(Campaign.class))).thenReturn(expectedResult);
+
+        Campaign result = campaignService.updateCampaign(campaignId, updatedCampaignData);
+
+        assertNotNull(result);
+        assertEquals(campaignId, result.getCampaignId());
+        assertEquals("New Title", result.getJudul());
+        assertEquals(100, result.getTarget());
+        assertEquals("New Description", result.getDeskripsi());
+        assertEquals("http://new.com/proof.pdf", result.getBuktiPenggalanganDana());
+
+        verify(campaignRepository).findById(campaignId);
+        verify(campaignRepository).save(any(Campaign.class));
     }
 
     @Test

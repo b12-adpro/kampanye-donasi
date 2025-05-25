@@ -191,14 +191,29 @@ public class CampaignControllerTest {
 
     @Test
     void testUpdateCampaign() throws Exception {
-        when(campaignService.updateCampaign(any(Campaign.class))).thenReturn(campaignWithBukti);
+        Campaign updatedCampaign = new Campaign();
+        updatedCampaign.setCampaignId(campaignId);
+        updatedCampaign.setJudul("Updated Title");
+        updatedCampaign.setTarget(200);
+        updatedCampaign.setDeskripsi("Updated Description");
+        updatedCampaign.setBuktiPenggalanganDana("http://updated.com/proof.pdf");
 
-        mockMvc.perform(put("/api/campaign/")
+        when(campaignService.updateCampaign(eq(campaignId), any(Campaign.class)))
+                .thenReturn(updatedCampaign);
+
+        // Act & Assert
+        mockMvc.perform(put("/api/campaign/{campaignId}/update", campaignId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(campaignWithBukti)))
+                        .content(objectMapper.writeValueAsString(updatedCampaign)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.campaignId").value(campaignId.toString()));
-        verify(campaignService).updateCampaign(any(Campaign.class));
+                .andExpect(jsonPath("$.campaignId").value(campaignId.toString()))
+                .andExpect(jsonPath("$.judul").value("Updated Title"))
+                .andExpect(jsonPath("$.target").value(200))
+                .andExpect(jsonPath("$.deskripsi").value("Updated Description"))
+                .andExpect(jsonPath("$.buktiPenggalanganDana").value("http://updated.com/proof.pdf"));
+
+        // Verify
+        verify(campaignService).updateCampaign(eq(campaignId), any(Campaign.class));
     }
 
     @Test

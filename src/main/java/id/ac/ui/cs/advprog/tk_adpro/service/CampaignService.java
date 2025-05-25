@@ -13,7 +13,7 @@ public interface CampaignService {
     void inactivateCampaign(UUID campaignId);
     Campaign getCampaignByCampaignId(UUID campaignId);
     List<Campaign> getCampaignByFundraiserId(UUID fundraiserId);
-    Campaign updateCampaign(Campaign campaign);
+    Campaign updateCampaign(UUID campaignId, Campaign updatedCampaign);
     void deleteCampaign(UUID campaignId);
     String getBuktiPenggalanganDana(UUID campaignId);
     List<Campaign> getAllCampaigns();

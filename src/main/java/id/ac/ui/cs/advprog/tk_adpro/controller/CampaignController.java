@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import jakarta.annotation.PostConstruct;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -117,10 +118,15 @@ public class CampaignController {
         }
     }
 
-    @PutMapping("/")
-    public ResponseEntity<Campaign> updateCampaign(@RequestBody Campaign campaign) {
-        campaignService.updateCampaign(campaign);
-        return ResponseEntity.ok(campaign);
+    @PutMapping("/{campaignId}/update")
+    public ResponseEntity<Campaign> updateCampaign(@PathVariable UUID campaignId, @RequestBody Campaign campaign) {
+        try {
+            campaign.setCampaignId(campaignId);
+            Campaign updated = campaignService.updateCampaign(campaignId, campaign);
+            return ResponseEntity.ok(updated);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{campaignId}/delete")
