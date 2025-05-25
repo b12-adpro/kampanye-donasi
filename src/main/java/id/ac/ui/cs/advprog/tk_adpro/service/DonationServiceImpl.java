@@ -81,7 +81,7 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     public List<Donation> getDonationsByCampaignId(UUID campaignId) {
-        return donationRepository.findByCampaignId(campaignId);
+        return donationRepository.findByCampaignIdAndStatusNamed(campaignId, DonationStatus.COMPLETED.getValue());
     }
 
     @Override

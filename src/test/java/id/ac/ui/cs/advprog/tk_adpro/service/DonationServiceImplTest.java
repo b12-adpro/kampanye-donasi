@@ -249,12 +249,12 @@ class DonationServiceImplTest {
             campaignId,
             UUID.randomUUID(),
             169500,
-            DonationStatus.CANCELED.getValue(),
+            DonationStatus.COMPLETED.getValue(),
             LocalDateTime.now(),
             "Get well soon!"
         );
         List<Donation> donations = Arrays.asList(donation1, donation2);
-        when(donationRepository.findByCampaignId(campaignId)).thenReturn(donations);
+        when(donationRepository.findByCampaignIdAndStatusNamed(campaignId, DonationStatus.COMPLETED.getValue())).thenReturn(donations);
 
         List<Donation> result = donationService.getDonationsByCampaignId(campaignId);
         assertEquals(donations, result);
