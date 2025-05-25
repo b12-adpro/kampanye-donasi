@@ -191,14 +191,14 @@ public class CampaignControllerTest {
 
     @Test
     void testUpdateCampaign() throws Exception {
-        when(campaignService.updateCampaign(any(Campaign.class))).thenReturn(campaignWithBukti);
+        when(campaignService.updateCampaign(campaignId, campaignWithBukti)).thenReturn(campaignWithBukti);
 
         mockMvc.perform(put("/api/campaign/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(campaignWithBukti)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.campaignId").value(campaignId.toString()));
-        verify(campaignService).updateCampaign(any(Campaign.class));
+        verify(campaignService).updateCampaign(campaignId, campaignWithBukti);
     }
 
     @Test

@@ -217,7 +217,7 @@ public class CampaignServiceImplTest {
 
         when(campaignRepository.save(campaign)).thenReturn(campaign);
 
-        Campaign updatedCampaign = campaignService.updateCampaign(campaign);
+        Campaign updatedCampaign = campaignService.updateCampaign(campaign.getCampaignId(), campaign);
         assertEquals("New Title", updatedCampaign.getJudul());
         assertEquals(100, updatedCampaign.getTarget());
         assertEquals("New Deskripsi", updatedCampaign.getDeskripsi());

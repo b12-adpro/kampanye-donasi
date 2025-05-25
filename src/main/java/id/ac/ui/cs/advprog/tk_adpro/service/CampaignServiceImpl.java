@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.tk_adpro.service;
 
 import id.ac.ui.cs.advprog.tk_adpro.exception.WithdrawServiceException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import id.ac.ui.cs.advprog.tk_adpro.enums.CampaignStatus;
@@ -78,8 +79,22 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public Campaign updateCampaign(Campaign campaign) {
-        return campaignRepository.save(campaign);
+    public Campaign updateCampaign(UUID campaignId, Campaign updatedCampaign) {
+        Optional<Campaign> existingOpt = campaignRepository.findById(campaignId);
+
+        if (existingOpt.isPresent()) {
+            Campaign existing = existingOpt.get();
+
+            // Update the fields that can be modified
+            existing.setJudul(updatedCampaign.getJudul());
+            existing.setTarget(updatedCampaign.getTarget());
+            existing.setDeskripsi(updatedCampaign.getDeskripsi());
+            existing.setBuktiPenggalanganDana(updatedCampaign.getBuktiPenggalanganDana());
+
+            return campaignRepository.save(existing);
+        } else {
+            throw new EntityNotFoundException("Campaign not found with id: " + campaignId);
+        }
     }
 
     @Override

@@ -47,7 +47,10 @@ jobs:
               --name=web_server \
               --network kampanye-network \
               -p 8080:8080 \
+<<<<<<< HEAD
               --restart unless-stopped \
+=======
+>>>>>>> e57291d066414ec9b115fa142c4a131228e85f3a
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               -e DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }} \
               -e DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
