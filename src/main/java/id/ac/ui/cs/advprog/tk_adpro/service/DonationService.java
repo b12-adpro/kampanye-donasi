@@ -13,5 +13,4 @@ public interface DonationService {
     List<Donation> getDonationsByDonaturId(UUID donaturId);
     List<Donation> getDonationsByCampaignId(UUID campaignId);
     Donation updateDonationMessage(UUID donationId, String newMessage);
-    Donation deleteDonationMessage(UUID donationId);
 }
