@@ -5,6 +5,7 @@ import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
 import id.ac.ui.cs.advprog.tk_adpro.repository.DonationRepository;
 import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusState;
 import id.ac.ui.cs.advprog.tk_adpro.state.DonationStatusStateFactory;
+import id.ac.ui.cs.advprog.tk_adpro.strategy.PaymentServiceApiStrategy;
 import id.ac.ui.cs.advprog.tk_adpro.strategy.PaymentStrategy;
 import id.ac.ui.cs.advprog.tk_adpro.exception.InsufficientBalanceException;
 
@@ -22,7 +23,7 @@ public class DonationServiceImpl implements DonationService {
     private DonationRepository donationRepository;
 
     @Autowired
-    private PaymentStrategy paymentStrategy;
+    private PaymentServiceApiStrategy paymentStrategy;
 
     @Override
     public Donation checkBalance(Donation donation) {
@@ -38,7 +39,12 @@ public class DonationServiceImpl implements DonationService {
         if (donation.getStatus().equals(DonationStatus.COMPLETED.getValue())) {
             try {
                 checkBalance(donation);
-                paymentStrategy.processPayment(donation.getDonaturId(), donation.getAmount());
+                paymentStrategy.processPayment(
+                    donation.getDonationId(),
+                    donation.getCampaignId(),
+                    donation.getDonaturId(),
+                    donation.getAmount()
+                );
                 //TODO: Notify Campaign
             } catch (InsufficientBalanceException e) {
                 DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
