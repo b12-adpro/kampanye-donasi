@@ -1,10 +1,12 @@
 package id.ac.ui.cs.advprog.tk_adpro.controller;
 
+import id.ac.ui.cs.advprog.tk_adpro.dto.DonationDTO;
 import id.ac.ui.cs.advprog.tk_adpro.enums.DonationStatus;
 import id.ac.ui.cs.advprog.tk_adpro.model.Donation;
 import id.ac.ui.cs.advprog.tk_adpro.service.DonationService;
 import id.ac.ui.cs.advprog.tk_adpro.exception.InsufficientBalanceException;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,18 +20,26 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/donations")
+@CrossOrigin(origins = {"http://localhost:3000", "https://fe-aryaradityakusuma2006-gmailcoms-projects.vercel.app"})
 public class DonationController {
     @Autowired
     private DonationService donationService;
 
-    @PostMapping("/campaigns/{campaignId}")
-    public ResponseEntity<Object> createDonation(@PathVariable UUID campaignId, @RequestBody Donation donation) {
+    @PostMapping("/campaigns")
+    public ResponseEntity<Object> createDonation(
+            @RequestBody @Valid DonationDTO donationRequest
+    ) {
         try {
-            donation.setCampaignId(campaignId);
-            if (donation.getDatetime() == null) donation.setDatetime(LocalDateTime.now());
-
-            donationService.checkBalance(donation);
-            Donation createdDonation = donationService.createDonation(donation);
+            Donation newDonation = new Donation(
+                donationRequest.getDonationId(),
+                donationRequest.getCampaignId(),
+                donationRequest.getDonaturId(),
+                donationRequest.getAmount(),
+                donationRequest.getStatus(),
+                (donationRequest.getDatetime() != null) ? donationRequest.getDatetime() : LocalDateTime.now(),
+                donationRequest.getMessage()
+            );
+            Donation createdDonation = donationService.createDonation(newDonation);
             return new ResponseEntity<>(createdDonation, HttpStatus.CREATED);
         } catch (InsufficientBalanceException e) {
             return badRequest(e.getMessage());
@@ -38,23 +48,20 @@ public class DonationController {
         }
     }
 
-    @PatchMapping("/{donationId}/status")
-    public ResponseEntity<Object> updateDonationStatus(@PathVariable UUID donationId, @RequestBody Map<String, String> statusUpdate) {
+    @PatchMapping("/cancel")
+    public ResponseEntity<Object> cancelDonation(@RequestBody UUID donationId) {
         try {
-            String status = statusUpdate.get("status");
-            Donation updatedDonation;
-            if (DonationStatus.COMPLETED.getValue().equals(status)) {
-                updatedDonation = donationService.completeDonation(donationId);
-            } else if (DonationStatus.CANCELED.getValue().equals(status)) {
-                updatedDonation = donationService.cancelDonation(donationId);
+            String donationStatus = donationService.getDonationByDonationId(donationId).getStatus();
+            if (donationStatus.equals(DonationStatus.PENDING.getValue())) {
+                Donation updatedDonation = donationService.cancelDonation(donationId);
+                return new ResponseEntity<>(updatedDonation, HttpStatus.OK);
             } else {
-                return badRequest("Invalid status value. Accepted values: COMPLETED, CANCELED");
+                return badRequest("The current status of Donation can't be canceled!");
             }
-            return new ResponseEntity<>(updatedDonation, HttpStatus.OK);
         } catch (InsufficientBalanceException e) {
             return badRequest(e.getMessage());
         } catch (Exception e) {
-            return serverError("Failed to update donation status: " + e.getMessage());
+            return serverError("Failed to cancel Donation: " + e.getMessage());
         }
     }
 
@@ -63,8 +70,8 @@ public class DonationController {
         try {
             Donation donation = donationService.getDonationByDonationId(donationId);
             return donation == null
-                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
-                : new ResponseEntity<>(donation, HttpStatus.OK);
+                    ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
+                    : new ResponseEntity<>(donation, HttpStatus.OK);
         } catch (Exception e) {
             return serverError("Failed to retrieve donation: " + e.getMessage());
         }
@@ -90,28 +97,17 @@ public class DonationController {
         }
     }
 
-    @PatchMapping("/{donationId}/message")
-    public ResponseEntity<Object> updateDonationMessage(@PathVariable UUID donationId, @RequestBody Map<String, String> payload) {
+    @PatchMapping("/message")
+    public ResponseEntity<Object> updateDonationMessage(
+            @RequestParam("donationId") UUID donationId,
+            @RequestParam("message") String message) {
         try {
-            String newMessage = payload.get("message");
-            Donation updatedDonation = donationService.updateDonationMessage(donationId, newMessage);
+            Donation updatedDonation = donationService.updateDonationMessage(donationId, message);
             return updatedDonation == null
-                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
-                : new ResponseEntity<>(updatedDonation, HttpStatus.OK);
+                    ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
+                    : new ResponseEntity<>(updatedDonation, HttpStatus.OK);
         } catch (Exception e) {
             return serverError("Failed to update message: " + e.getMessage());
-        }
-    }
-
-    @DeleteMapping("/{donationId}/message")
-    public ResponseEntity<Object> deleteDonationMessage(@PathVariable UUID donationId) {
-        try {
-            Donation updatedDonation = donationService.deleteDonationMessage(donationId);
-            return updatedDonation == null
-                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
-                : new ResponseEntity<>(updatedDonation, HttpStatus.OK);
-        } catch (Exception e) {
-            return serverError("Failed to delete message: " + e.getMessage());
         }
     }
 
