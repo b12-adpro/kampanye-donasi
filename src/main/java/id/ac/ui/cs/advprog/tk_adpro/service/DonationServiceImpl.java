@@ -50,15 +50,6 @@ public class DonationServiceImpl implements DonationService {
 
     @Override
     @Transactional
-    public Donation completeDonation(UUID donationId) {
-        Donation donation = getDonationByIdOrThrow(donationId);
-        DonationStatusState currentState = DonationStatusStateFactory.getState(donation);
-        currentState.complete(donation);
-        return createDonation(donation);
-    }
-
-    @Override
-    @Transactional
     public Donation cancelDonation(UUID donationId) {
         Donation donation = getDonationByIdOrThrow(donationId);
         DonationStatusState currentState = DonationStatusStateFactory.getState(donation);

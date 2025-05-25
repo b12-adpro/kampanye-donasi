@@ -8,7 +8,6 @@ import java.util.UUID;
 public interface DonationService {
     Donation checkBalance(Donation donation);
     Donation createDonation(Donation donation);
-    Donation completeDonation(UUID donationId);
     Donation cancelDonation(UUID donationId);
     Donation getDonationByDonationId(UUID donationId);
     List<Donation> getDonationsByDonaturId(UUID donaturId);
