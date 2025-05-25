@@ -50,18 +50,16 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
     public double checkBalance(UUID donaturId) {
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("userId", donaturId);
+            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-            logger.debug("Sending balance check request to: {}", CHECK_BALANCE_URL);
+            String urlWithParams = CHECK_BALANCE_URL + "?userId=" + donaturId;
+            logger.debug("Sending balance check request to: {}", urlWithParams);
 
             ResponseEntity<Map> response = restTemplate.exchange(
-                CHECK_BALANCE_URL,
-                HttpMethod.POST,
+                urlWithParams,
+                HttpMethod.GET,
                 requestEntity,
                 Map.class
             );
