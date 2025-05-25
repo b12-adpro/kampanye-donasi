@@ -23,7 +23,7 @@ public class DonationServiceImpl implements DonationService {
     private DonationRepository donationRepository;
 
     @Autowired
-    private PaymentServiceApiStrategy paymentStrategy;
+    private PaymentStrategy paymentStrategy;
 
     @Override
     public Donation checkBalance(Donation donation) {
