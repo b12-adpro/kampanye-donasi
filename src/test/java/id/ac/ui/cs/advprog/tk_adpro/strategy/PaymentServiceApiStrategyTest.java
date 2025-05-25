@@ -34,10 +34,10 @@ class PaymentServiceApiStrategyTest {
     private static PaymentStrategy paymentStrategy;
 
     @Value("${payment.service.check-balance-url}")
-    private static String CHECK_BALANCE_URL;
+    private String CHECK_BALANCE_URL;
 
     @Value("${payment.service.process-payment-url}")
-    private static String PROCESS_PAYMENT_URL;
+    private String PROCESS_PAYMENT_URL;
 
     @BeforeEach
     void setUp() {
@@ -63,14 +63,16 @@ class PaymentServiceApiStrategyTest {
 
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenReturn(responseEntity);
 
         double balance = paymentStrategy.checkBalance(donaturId);
+
         assertEquals(100.5, balance);
     }
 
@@ -86,14 +88,16 @@ class PaymentServiceApiStrategyTest {
 
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenReturn(responseEntity);
 
         double balance = paymentStrategy.checkBalance(donaturId);
+
         assertEquals(75.0, balance);
     }
 
@@ -109,16 +113,18 @@ class PaymentServiceApiStrategyTest {
 
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenReturn(responseEntity);
 
         PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.checkBalance(donaturId)
+                paymentStrategy.checkBalance(donaturId)
         );
+
         assertTrue(exception.getMessage().contains("Invalid balance format received from payment service"));
     }
 
@@ -131,16 +137,18 @@ class PaymentServiceApiStrategyTest {
 
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenReturn(responseEntity);
 
         PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.checkBalance(donaturId)
+                paymentStrategy.checkBalance(donaturId)
         );
+
         assertTrue(exception.getMessage().contains("Missing or invalid 'data' field in response"));
     }
 
@@ -153,16 +161,18 @@ class PaymentServiceApiStrategyTest {
 
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.OK);
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenReturn(responseEntity);
 
         PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.checkBalance(donaturId)
+                paymentStrategy.checkBalance(donaturId)
         );
+
         assertTrue(exception.getMessage().contains("Missing or invalid 'data' field in response"));
     }
 
@@ -170,16 +180,18 @@ class PaymentServiceApiStrategyTest {
     void testCheckBalanceHttpClientError() {
         UUID donaturId = UUID.randomUUID();
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Bad Request"));
 
         PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.checkBalance(donaturId)
+                paymentStrategy.checkBalance(donaturId)
         );
+
         assertTrue(exception.getMessage().contains("Payment service returned an error: 400 BAD_REQUEST"));
     }
 
@@ -187,16 +199,18 @@ class PaymentServiceApiStrategyTest {
     void testCheckBalanceResourceAccessException() {
         UUID donaturId = UUID.randomUUID();
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenThrow(new ResourceAccessException("Connection refused"));
 
         PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.checkBalance(donaturId)
+                paymentStrategy.checkBalance(donaturId)
         );
+
         assertTrue(exception.getMessage().contains("Cannot connect to payment service"));
     }
 
@@ -204,16 +218,24 @@ class PaymentServiceApiStrategyTest {
     void testCheckBalanceUnexpectedException() {
         UUID donaturId = UUID.randomUUID();
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
+        )).thenReturn(null);
+        when(restTemplate.exchange(
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenThrow(new RuntimeException("Unexpected error"));
 
         PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.checkBalance(donaturId)
+                paymentStrategy.checkBalance(donaturId)
         );
+
         assertTrue(exception.getMessage().contains("Unexpected error during balance check"));
     }
 
@@ -229,16 +251,18 @@ class PaymentServiceApiStrategyTest {
 
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenReturn(responseEntity);
 
         PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.checkBalance(donaturId)
+                paymentStrategy.checkBalance(donaturId)
         );
+
         assertTrue(exception.getMessage().contains("Status: 500 INTERNAL_SERVER_ERROR"));
     }
 
@@ -248,16 +272,18 @@ class PaymentServiceApiStrategyTest {
 
         ResponseEntity<Map> responseEntity = new ResponseEntity<>(null, HttpStatus.OK);
 
+        String expectedUrl = CHECK_BALANCE_URL + "?userId=" + donaturId;
         when(restTemplate.exchange(
-            eq(CHECK_BALANCE_URL),
-            eq(HttpMethod.POST),
-            any(HttpEntity.class),
-            eq(Map.class)
+                eq(expectedUrl),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                eq(Map.class)
         )).thenReturn(responseEntity);
 
         PaymentServiceException exception = assertThrows(PaymentServiceException.class, () ->
-            paymentStrategy.checkBalance(donaturId)
+                paymentStrategy.checkBalance(donaturId)
         );
+
         assertTrue(exception.getMessage().contains("Failed to check balance from payment service"));
     }
 
