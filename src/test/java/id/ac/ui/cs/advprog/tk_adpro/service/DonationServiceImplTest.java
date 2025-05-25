@@ -286,31 +286,4 @@ class DonationServiceImplTest {
 
         assertThrows(RuntimeException.class, () -> donationService.updateDonationMessage(id, "new message"));
     }
-
-    @Test
-    void testDeleteDonationMessage() {
-        UUID donationId = UUID.randomUUID();
-        Donation donation = new Donation(
-            donationId,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            169500,
-            DonationStatus.PENDING.getValue(),
-            LocalDateTime.now(),
-            "Get well soon!"
-        );
-        when(donationRepository.findById(donationId)).thenReturn(Optional.of(donation));
-        when(donationRepository.save(donation)).thenReturn(donation);
-
-        Donation result = donationService.deleteDonationMessage(donationId);
-        assertNull(result.getMessage());
-    }
-
-    @Test
-    void testDeleteDonationMessage_DonationNotFound() {
-        UUID id = UUID.randomUUID();
-        when(donationRepository.findById(id)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () -> donationService.deleteDonationMessage(id));
-    }
 }

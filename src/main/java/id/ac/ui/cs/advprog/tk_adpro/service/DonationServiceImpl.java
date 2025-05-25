@@ -91,12 +91,4 @@ public class DonationServiceImpl implements DonationService {
         donation.setMessage(newMessage);
         return donationRepository.save(donation);
     }
-
-    @Override
-    @Transactional
-    public Donation deleteDonationMessage(UUID donationId) {
-        Donation donation = getDonationByIdOrThrow(donationId);
-        donation.setMessage(null);
-        return donationRepository.save(donation);
-    }
 }
