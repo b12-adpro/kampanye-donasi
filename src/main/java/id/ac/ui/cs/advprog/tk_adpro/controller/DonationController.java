@@ -30,75 +30,38 @@ public class DonationController {
             @RequestBody @Valid DonationDTO donationRequest
     ) {
         try {
-            // Buat instance Donation dari DTO
             Donation newDonation = new Donation(
-                null,
+                donationRequest.getDonationId(),
                 donationRequest.getCampaignId(),
                 donationRequest.getDonaturId(),
                 donationRequest.getAmount(),
-                donationRequest.get
+                donationRequest.getStatus(),
+                (donationRequest.getDatetime() != null) ? donationRequest.getDatetime() : LocalDateTime.now(),
+                donationRequest.getMessage()
             );
-
-            // 1. Set campaignId dari @PathVariable (sumber kebenaran)
-            newDonation.setCampaignId(campaignId);
-
-            // 2. Set field lain dari DTO
-            newDonation.set
-            newDonation.setDonaturId(donationRequest.getDonaturId());
-            newDonation.setAmount(donationRequest.getAmount());
-            newDonation.setMessage(donationRequest.getMessage());
-
-            // 3. Handle datetime
-            // Jika klien mengirim datetime, gunakan itu. Jika tidak, set ke waktu sekarang.
-            if (donationRequest.getDatetime() != null) {
-                newDonation.setDatetime(donationRequest.getDatetime());
-            } else {
-                newDonation.setDatetime(LocalDateTime.now());
-            }
-
-            // 4. Set status donasi (tidak ada di DTO, di-set oleh server)
-            newDonation.setStatus("PENDING"); // Asumsi Donation memiliki setStatus() dan field status
-
-            // donationId akan di-generate oleh @PrePersist saat entitas disimpan.
-            // Pastikan kelas Donation Anda memiliki setter yang sesuai.
-
             Donation createdDonation = donationService.createDonation(newDonation);
             return new ResponseEntity<>(createdDonation, HttpStatus.CREATED);
-
         } catch (InsufficientBalanceException e) {
             return badRequest(e.getMessage());
-        } /* catch (MethodArgumentNotValidException e) { // Jika menggunakan @Valid dan validasi gagal
-            // Handle validation errors, misalnya:
-            // Map<String, String> errors = new HashMap<>();
-            // e.getBindingResult().getAllErrors().forEach((error) -> {
-            //     String fieldName = ((FieldError) error).getField();
-            //     String errorMessage = error.getDefaultMessage();
-            //     errors.put(fieldName, errorMessage);
-            // });
-            // return ResponseEntity.badRequest().body(errors);
-        } */ catch (Exception e) {
-            // log.error("Error creating donation: ", e); // Sebaiknya log error
+        } catch (Exception e) {
             return serverError("Failed to create donation: " + e.getMessage());
         }
     }
 
-    @PatchMapping("/{donationId}/status")
-    public ResponseEntity<Object> updateDonationStatus(@PathVariable UUID donationId, @RequestBody Map<String, String> statusUpdate) {
+    @PatchMapping("/cancel")
+    public ResponseEntity<Object> cancelDonation(@RequestBody UUID donationId) {
         try {
-            String status = statusUpdate.get("status");
-            Donation updatedDonation;
-            if (DonationStatus.COMPLETED.getValue().equals(status)) {
-                updatedDonation = donationService.completeDonation(donationId);
-            } else if (DonationStatus.CANCELED.getValue().equals(status)) {
-                updatedDonation = donationService.cancelDonation(donationId);
+            String donationStatus = donationService.getDonationByDonationId(donationId).getStatus();
+            if (donationStatus.equals(DonationStatus.PENDING.getValue())) {
+                Donation updatedDonation = donationService.cancelDonation(donationId);
+                return new ResponseEntity<>(updatedDonation, HttpStatus.OK);
             } else {
-                return badRequest("Invalid status value. Accepted values: COMPLETED, CANCELED");
+                return badRequest("The current status of Donation can't be canceled!");
             }
-            return new ResponseEntity<>(updatedDonation, HttpStatus.OK);
         } catch (InsufficientBalanceException e) {
             return badRequest(e.getMessage());
         } catch (Exception e) {
-            return serverError("Failed to update donation status: " + e.getMessage());
+            return serverError("Failed to cancel Donation: " + e.getMessage());
         }
     }
 
@@ -107,8 +70,8 @@ public class DonationController {
         try {
             Donation donation = donationService.getDonationByDonationId(donationId);
             return donation == null
-                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
-                : new ResponseEntity<>(donation, HttpStatus.OK);
+                    ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
+                    : new ResponseEntity<>(donation, HttpStatus.OK);
         } catch (Exception e) {
             return serverError("Failed to retrieve donation: " + e.getMessage());
         }
@@ -134,28 +97,17 @@ public class DonationController {
         }
     }
 
-    @PatchMapping("/{donationId}/message")
-    public ResponseEntity<Object> updateDonationMessage(@PathVariable UUID donationId, @RequestBody Map<String, String> payload) {
+    @PatchMapping("/message")
+    public ResponseEntity<Object> updateDonationMessage(
+            @RequestParam("donationId") UUID donationId,
+            @RequestParam("message") String message) {
         try {
-            String newMessage = payload.get("message");
-            Donation updatedDonation = donationService.updateDonationMessage(donationId, newMessage);
+            Donation updatedDonation = donationService.updateDonationMessage(donationId, message);
             return updatedDonation == null
-                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
-                : new ResponseEntity<>(updatedDonation, HttpStatus.OK);
+                    ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
+                    : new ResponseEntity<>(updatedDonation, HttpStatus.OK);
         } catch (Exception e) {
             return serverError("Failed to update message: " + e.getMessage());
-        }
-    }
-
-    @DeleteMapping("/{donationId}/message")
-    public ResponseEntity<Object> deleteDonationMessage(@PathVariable UUID donationId) {
-        try {
-            Donation updatedDonation = donationService.deleteDonationMessage(donationId);
-            return updatedDonation == null
-                ? new ResponseEntity<>(HttpStatus.NOT_FOUND)
-                : new ResponseEntity<>(updatedDonation, HttpStatus.OK);
-        } catch (Exception e) {
-            return serverError("Failed to delete message: " + e.getMessage());
         }
     }
 
