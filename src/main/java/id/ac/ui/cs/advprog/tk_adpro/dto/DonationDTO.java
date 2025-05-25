@@ -24,6 +24,9 @@ public class DonationDTO {
     @Min(value = 1, message = "Amount must be at least 1")
     private int amount;
 
+    @NotNull(message = "Status can't be empty!")
+    private String status;
+
     @Nullable
     @Size(max = 500, message = "Message can't be more than 500 characters")
     private String message;
@@ -32,23 +35,13 @@ public class DonationDTO {
 
     public DonationDTO() {}
 
-    public DonationDTO(@Nullable UUID donationId, UUID campaignId, UUID donaturId, int amount, LocalDateTime datetime, @Nullable String message) {
+    public DonationDTO(@Nullable UUID donationId, UUID campaignId, UUID donaturId, int amount, String status, LocalDateTime datetime, @Nullable String message) {
         this.donationId = donationId;
         this.campaignId = campaignId;
         this.donaturId = donaturId;
         this.amount = amount;
+        this.status = status;
         this.datetime = datetime;
         this.message = message;
-    }
-
-    @Override
-    public String toString() {
-        return "DonationRequestDTO{" +
-                "campaignId=" + campaignId +
-                ", donaturId=" + donaturId +
-                ", amount=" + amount +
-                ", message='" + message + '\'' +
-                ", datetime=" + datetime +
-                '}';
     }
 }
