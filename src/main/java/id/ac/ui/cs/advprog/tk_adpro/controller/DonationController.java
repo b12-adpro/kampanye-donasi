@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/donations")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "https://fe-aryaradityakusuma2006-gmailcoms-projects.vercel.app"})
 public class DonationController {
     @Autowired
     private DonationService donationService;
