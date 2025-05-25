@@ -28,8 +28,8 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 @Service
 public class PaymentServiceApiStrategy implements PaymentStrategy {
     private static final Logger logger = LoggerFactory.getLogger(PaymentServiceApiStrategy.class);
-    private static final String CHECK_BALANCE_URL = "http://dummy-payment-service.com/api/checkBalance";
-    private static final String PROCESS_PAYMENT_URL = "http://dummy-payment-service.com/api/processPayment";
+    private static final String CHECK_BALANCE_URL = "http://dummy-payment-service.com/api/wallet";
+    private static final String PROCESS_PAYMENT_URL = "http://dummy-payment-service.com/api/wallet/donate";
     private final RestTemplate restTemplate;
 
     @Autowired
@@ -41,20 +41,16 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
     }
 
     @Override
-    public int checkBalance(UUID donaturId) {
+    public double checkBalance(UUID donaturId) {
         try {
-            // Prepare HTTP headers and body for JSON communication
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-            // Create request body as a map
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("donaturId", donaturId);
+            requestBody.put("userId", donaturId);
 
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
-
-            // Send POST request to the checkBalance API
             logger.debug("Sending balance check request to: {}", CHECK_BALANCE_URL);
 
             ResponseEntity<Map> response = restTemplate.exchange(
@@ -64,15 +60,20 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
                 Map.class
             );
 
-            // Process response
             Map body = response.getBody();
             if (response.getStatusCode() == HttpStatus.OK && body != null) {
-                Object balanceObj = body.get("balance");
-                if (balanceObj instanceof Number number) {
-                    return number.intValue();
+                Object dataObj = body.get("data");
+                if (dataObj instanceof Map dataMap) {
+                    Object balanceObj = dataMap.get("balance");
+                    if (balanceObj instanceof Number number) {
+                        return number.doubleValue();
+                    } else {
+                        logger.error("Invalid balance format received: {}", balanceObj);
+                        throw new PaymentServiceException("Invalid balance format received from payment service");
+                    }
                 } else {
-                    logger.error("Invalid balance format received: {}", balanceObj);
-                    throw new PaymentServiceException("Invalid balance format received from payment service");
+                    logger.error("Missing or invalid 'data' field in response: {}", dataObj);
+                    throw new PaymentServiceException("Missing or invalid 'data' field in response");
                 }
             }
             logger.error("Failed to check balance. Status code: {}", response.getStatusCode());
@@ -92,7 +93,7 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
 
     @Override
     @Async
-    public CompletableFuture<Void> processPayment(UUID donaturId, int amount) {
+    public CompletableFuture<Void> processPayment(UUID donationId, UUID campaignId, UUID donaturId, int amount) {
         return CompletableFuture.runAsync(() -> {
             try {
                 HttpHeaders headers = new HttpHeaders();
@@ -100,7 +101,9 @@ public class PaymentServiceApiStrategy implements PaymentStrategy {
                 headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
                 Map<String, Object> requestBody = Map.of(
-                    "donaturId", donaturId,
+                    "donationId", donationId.toString(),
+                    "campaignId", campaignId.toString(),
+                    "donaturId", donaturId.toString(),
                     "amount", amount
                 );
                 HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
