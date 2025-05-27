@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.tk_adpro.strategy;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -27,8 +28,11 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 public class WithdrawServiceAPIStrategy implements WithdrawStrategy {
     private static final Logger logger = LoggerFactory.getLogger(WithdrawServiceAPIStrategy.class);
 
-    private static final String CHECK_BALANCE_URL = "http://dummy-withdraw-service.com/api/checkBalance";
-    private static final String WITHDRAW_MONEY_URL = "http://dummy-withdraw-service.com/api/withdrawMoney";
+    @Value("${payment.service.check-balance-url}")
+    private String CHECK_BALANCE_URL;
+
+    @Value("${payment.service.process-withdraw-url}")
+    private String WITHDRAW_MONEY_URL;
 
     private final RestTemplate restTemplate;
 
